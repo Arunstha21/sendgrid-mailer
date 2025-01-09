@@ -22,6 +22,19 @@ export default function New() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
+  const [shake, setShake] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      shakeForm();
+    }
+  }, [error]);
+
+  function shakeForm() {
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
+  }
+
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,6 +53,7 @@ export default function New() {
       setSuccess("Email sent successfully!");
       setLoading(false);
     } catch (error: any) {
+      shakeForm();
       setError(error.message);
       console.error('Error sending email:', error.message);
       setLoading(false);
@@ -58,8 +72,8 @@ export default function New() {
   }, []);
 
   return (
-    <div className="flex items-center justify-center h-full">
-      <Card className="flex flex-col w-full">
+    <div className="container mx-auto py-8">
+      <Card className={`w-full max-w-6xl mx-auto ${shake ? 'animate-shake' : ''}`}>
         <CardHeader className="flex items-center justify-between">
           Compose New Email
         </CardHeader>
@@ -127,11 +141,18 @@ export default function New() {
             </div>
           </form>
         </CardContent>
-        <CardDescription>
-          {error && <p className="text-red-500">{error}</p>}
-          {success && <p className="text-green-500">{success}</p>}
-        </CardDescription>
       </Card>
+      {error && (
+        <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-md">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="mt-4 p-4 bg-green-100 text-green-700 rounded-md">
+          {success}
+        </div>
+      )}
     </div>
+    
   );
 }
