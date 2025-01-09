@@ -90,7 +90,8 @@ export async function sendEmail(emailData: EmailData): Promise<string> {
   };
 
   try {
-    await sgMail.send(emailParams as any);
+    const mail = await sgMail.send(emailParams as any);
+    console.log(mail);
     console.log('Mail sent successfully.');
     return 'Mail sent successfully.';
   } catch (error : any) {
