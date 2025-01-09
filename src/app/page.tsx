@@ -50,7 +50,8 @@ export default function LoginPage() {
       await login(data.userName, data.password)
 
       router.push('/dashboard/new')
-    } catch (err) {
+    } catch (err:any) {
+        console.error(err)
       setError('Failed to log in. Please check your credentials.')
     }
   }

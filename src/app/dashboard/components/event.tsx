@@ -41,10 +41,7 @@ type EventData = {
 };
 
 const defaultSelectedSender = { email: "", name: "" };
-
 const mapList = ["Erangel", "Miramar", "Sanhok"];
-
-// Dummy groups data - replace with actual data fetching logic
 
 export default function Event() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -255,6 +252,7 @@ export default function Event() {
       subject,
       message: ReactDOMServer.renderToStaticMarkup(emailContent),
     };
+
 
     try {
       await sendEmail(emailData);

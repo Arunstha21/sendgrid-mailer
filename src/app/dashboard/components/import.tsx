@@ -76,7 +76,8 @@ export default function ImportData() {
       } else {
         setError(`Invalid ${type === "event" ? "Event Data" : "Schedule Data"} format`);
       }
-    } catch (err) {
+    } catch (err:any) {
+      console.log(err);
       setError("Failed to parse CSV file");
     } finally {
       setIsLoading(false);
@@ -97,7 +98,8 @@ export default function ImportData() {
       } else {
         setError(`Invalid ${type === "event" ? "Event Data" : "Schedule Data"} format`);
       }
-    } catch (err) {
+    } catch (err:any) {
+      console.log(err);
       setError("Failed to parse Excel file");
     } finally {
       setIsLoading(false);

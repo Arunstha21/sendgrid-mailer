@@ -68,7 +68,7 @@ export default function EventMessage({ type, data }: Props) {
         <p>Hi Team,</p>
         <p>{idPass.event} of {idPass.stage}</p>
         <p>Match {idPass.matchNo} for your group is scheduled for {idPass.date} at {idPass.startTime}.</p>
-        <p>Please be on time and don't forget to stay in your specific slot.</p>
+        <p>{`Please be on time and don't forget to stay in your specific slot.`}</p>
         <p>Please find the match credentials below:</p>
         
         <h3>Match Credentials</h3>

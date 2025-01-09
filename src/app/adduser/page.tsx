@@ -59,11 +59,12 @@ export default function AddUserPage() {
             setError("Failed to create user. Please try again.");
           }
         })
-        .catch((err) => {
+        .catch(() => {
           setError("Failed to create user. Please try again.");
         });
       form.reset();
-    } catch (err) {
+    } catch (err:any) {
+        console.log(err);
       setError("Failed to create user. Please try again.");
     }
   }

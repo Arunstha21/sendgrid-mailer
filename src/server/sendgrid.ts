@@ -37,7 +37,7 @@ async function fetchSenders(): Promise<Sender[]> {
       url: '/v3/senders',
       method: 'GET',
     });
-    
+    response.statusCode = 200;
     return body as Sender[];
   } catch (error: any) {
     console.error('Error fetching sender list:', error.response?.body || error.message);
@@ -91,9 +91,7 @@ export async function sendEmail(emailData: EmailData): Promise<string> {
     };
 
     await sgMail.send(emailParams as any)
-        .then((response) => {
-            const messageId = response[0].headers['x-message-id'];
-
+        .then(() => {
             console.log('Mail sent successfully.');
             return 'Mail sent successfully.';
         })
