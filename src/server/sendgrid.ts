@@ -60,7 +60,6 @@ export async function getEmailList(): Promise<from[]> {
 export async function sendEmail(emailData: EmailData): Promise<string> {
   const { from, tos, bccs = [], subject, message } = emailData;
 
-  // Verify sender exists
   let verifiedSender;
   try {
     const senders = await fetchSenders();
@@ -68,40 +67,39 @@ export async function sendEmail(emailData: EmailData): Promise<string> {
     if (!verifiedSender) {
       throw new Error(`Sender email '${from}' is not verified.`);
     }
-  } catch (error: any) {
-    console.error('Error verifying sender:', error.message);
+  } catch (error) {
+    console.error('Error verifying sender:', error instanceof Error ? error.message : error);
     throw new Error('Unable to verify sender email.');
   }
 
-    const emailParams = {
-      personalizations: [
-        {
-          to: tos.map(email => ({ email })),
-          bcc: bccs.map(email => ({ email })),
-        },
-      ],
-      from: verifiedSender,
-      subject,
-      content: [
-        {
-          type: 'text/html',
-          value: message,
-        },
-      ],
-    };
+  const emailParams = {
+    personalizations: [
+      {
+        to: tos.map(email => ({ email })),
+        bcc: bccs.map(email => ({ email })),
+      },
+    ],
+    from: verifiedSender,
+    subject,
+    content: [
+      {
+        type: 'text/html',
+        value: message,
+      },
+    ],
+  };
 
-    await sgMail.send(emailParams as any)
-        .then(() => {
-            console.log('Mail sent successfully.');
-            return 'Mail sent successfully.';
-        })
-        .catch((error) => {
-            console.error('Error sending email:', error);
-            throw new Error('Error sending email.');
-        });
-
-        return 'Mail sent successfully.';
+  try {
+    await sgMail.send(emailParams as any);
+    console.log('Mail sent successfully.');
+    return 'Mail sent successfully.';
+  } catch (error : any) {
+    console.error('Error sending email:', error);
+    if (error.response) {
+      console.error('Response details:', error.response.body);
+    }
+    throw new Error('Failed to send email. Please check the logs for details.');
+  }
 }
-
 
 
