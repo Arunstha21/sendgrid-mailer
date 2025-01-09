@@ -64,7 +64,7 @@ export default function EventMessage({ type, data }: Props) {
   if (type === "ID Pass") {
     const idPass = data as IDPass
     return (
-      <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+      <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto', padding: '20px' }} contentEditable="plaintext-only">
         <p>Hi Team,</p>
         <p>{idPass.event} of {idPass.stage}</p>
         <p>Match {idPass.matchNo} for your group is scheduled for {idPass.date} at {idPass.startTime}.</p>
