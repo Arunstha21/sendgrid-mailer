@@ -106,6 +106,9 @@ export default function Event() {
       const list = await getEmailList();
       setEmailList(list);
       const eventData = await getEventData();
+      if (!eventData.length) {
+        return;
+      }
       setEventData(eventData);
 
       const event = eventData.map((event) => {
@@ -144,8 +147,6 @@ export default function Event() {
         dayInt % 10 > 3 || [11, 12, 13].includes(dayInt % 100) ? 0 : dayInt % 10
       ];
       const formattedDate = `${day}${suffix} ${new Date(`${year}-${month}-${day}`).toLocaleString("en-GB", { month: "short" })}`;
-  
-      console.log(formattedDate);
       
       const formattedTime = new Date(`1970-01-01T${match.startTime}`).toLocaleTimeString("en-GB", {
         hour: "2-digit",
@@ -255,11 +256,8 @@ export default function Event() {
       message: ReactDOMServer.renderToStaticMarkup(emailContent),
     };
 
-    console.log(emailData);
-    
-
     try {
-      // await sendEmail(emailData);
+      await sendEmail(emailData);
       setSuccess("Email sent successfully!");
     } catch (error: any) {
       setError(error.message || "Failed to send email");
