@@ -24,17 +24,17 @@ import { from, getEmailList, sendEmail } from "@/server/sendgrid";
 import EventMessage, { Grouping, IDPass } from "./message";
 import { Group, Schedule, getEventData, getGroupData, getScheduleData } from "@/server/database";
 
-type Event = {
+export type Event = {
   id: string;
   name: string;
 };
 
-type Stage = {
+export type Stage = {
   id: string;
   name: string;
 };
 
-type EventData = {
+export type EventDataE = {
   id: string;
   name: string;
   stages: Stage[];
@@ -80,7 +80,7 @@ export default function Event() {
     { map: string; date: string; startTime: string }[]
   >([]);
 
-  const [eventData, setEventData] = useState<EventData[]>([]);
+  const [eventData, setEventData] = useState<EventDataE[]>([]);
   const [eventList, setEventList] = useState<Event[]>([]);
   const [stageList, setStageList] = useState<Stage[]>([]);
   const [groupList, setGroupList] = useState<Group[]>([]);

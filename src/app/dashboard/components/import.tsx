@@ -1,17 +1,24 @@
+// import.tsx
 "use client";
 
 import { EventData, ImportDataDB, ScheduleData } from "@/server/database";
 import { useState } from "react";
 import * as XLSX from "xlsx";
+import MatchDataUploader from "./matchUploader";
 
 export default function ImportData() {
   const [data, setData] = useState<EventData[] | ScheduleData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
-  const [importType, setImportType] = useState<"event" | "schedule" | null>(null);
+  const [importType, setImportType] = useState<"event" | "schedule" | null>(
+    null
+  );
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: "event" | "schedule"): void => {
+  const handleFileUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    type: "event" | "schedule"
+  ): void => {
     const file = event.target.files?.[0];
     if (file) {
       setIsLoading(true);
@@ -22,7 +29,10 @@ export default function ImportData() {
         if (typeof content === "string") {
           if (file.name.endsWith(".csv")) {
             parseCSV(content, type);
-          } else if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
+          } else if (
+            file.name.endsWith(".xlsx") ||
+            file.name.endsWith(".xls")
+          ) {
             parseExcel(content, type);
           }
         }
@@ -31,17 +41,29 @@ export default function ImportData() {
     }
   };
 
-  const validateData = (parsedData: any[], type: "event" | "schedule"): boolean => {
+  const validateData = (
+    parsedData: any[],
+    type: "event" | "schedule"
+  ): boolean => {
     if (type === "event") {
-      return parsedData.every(
-        (item) =>
+      return parsedData.every((item) => {
+        const hasBaseFields =
           "event" in item &&
           "stage" in item &&
           "group" in item &&
           "slot" in item &&
-          "team" in item &&
-          "email" in item
-      );
+          "team" in item;
+
+        const players = extractPlayers(item);
+        const hasValidPlayers =
+          players.length >= 4 &&
+          players.length <= 6 &&
+          players.every(
+            (player) => "name" in player && "uid" in player && "email" in player
+          );
+
+        return hasBaseFields && hasValidPlayers;
+      });
     } else if (type === "schedule") {
       return parsedData.every(
         (item) =>
@@ -57,26 +79,51 @@ export default function ImportData() {
     return false;
   };
 
+  const extractPlayers = (row: Record<string, any>) => {
+    const players = [];
+    for (let i = 1; i <= 6; i++) {
+      const name = row[`name${i}`];
+      const uid = row[`uid${i}`];
+      const email = row[`email${i}`];
+      if (name && uid) {
+        players.push({ name, uid, email });
+      }
+    }
+    return players;
+  };
+
   const parseCSV = (content: string, type: "event" | "schedule"): void => {
     try {
       const lines = content.split("\n");
       const headers = lines[0]?.split(",") || [];
       const parsedData = lines.slice(1).map((line) => {
         const values = line.split(",");
-        return headers.reduce<Record<string, string | number>>((obj, header, index) => {
-          obj[header.trim()] = values[index]?.trim();
-          return obj;
-        }, {});
+        return headers.reduce<Record<string, string | number>>(
+          (obj, header, index) => {
+            obj[header.trim()] = values[index]?.trim();
+            return obj;
+          },
+          {}
+        );
       });
 
       if (parsedData.length > 0 && validateData(parsedData, type)) {
-        setData(
-          parsedData as (typeof type extends "event" ? EventData[] : ScheduleData[])
-        );
+        if (type === "event") {
+          setData(
+            parsedData.map((row) => ({
+              ...row,
+              players: extractPlayers(row),
+            })) as EventData[]
+          );
+        } else {
+          setData(parsedData as ScheduleData[]);
+        }
       } else {
-        setError(`Invalid ${type === "event" ? "Event Data" : "Schedule Data"} format`);
+        setError(
+          `Invalid ${type === "event" ? "Event Data" : "Schedule Data"} format`
+        );
       }
-    } catch (err:any) {
+    } catch (err: any) {
       console.log(err);
       setError("Failed to parse CSV file");
     } finally {
@@ -92,13 +139,25 @@ export default function ImportData() {
       const parsedData = XLSX.utils.sheet_to_json(sheet);
 
       if (parsedData.length > 0 && validateData(parsedData, type)) {
-        setData(
-          parsedData as (typeof type extends "event" ? EventData[] : ScheduleData[])
-        );
+        if (type === "event") {
+          setData(
+            parsedData.map((row) => {
+              const typedRow = row as Record<string, any>;
+              return {
+                ...typedRow,
+                players: extractPlayers(typedRow),
+              };
+            }) as EventData[]
+          );
+        } else {
+          setData(parsedData as ScheduleData[]);
+        }
       } else {
-        setError(`Invalid ${type === "event" ? "Event Data" : "Schedule Data"} format`);
+        setError(
+          `Invalid ${type === "event" ? "Event Data" : "Schedule Data"} format`
+        );
       }
-    } catch (err:any) {
+    } catch (err: any) {
       console.log(err);
       setError("Failed to parse Excel file");
     } finally {
@@ -112,7 +171,6 @@ export default function ImportData() {
       setIsLoading(true);
 
       await ImportDataDB(data, importType as "event" | "schedule");
-
     } catch (err: any) {
       setError(err.message || "An error occurred during import");
     } finally {
@@ -160,6 +218,8 @@ export default function ImportData() {
           </button>
         )}
       </div>
+
+      <MatchDataUploader />
       {error && <p className="text-red-500">{error}</p>}
       {isLoading && <p>Loading...</p>}
     </div>
