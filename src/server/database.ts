@@ -1,124 +1,150 @@
 "use server";
 
 import connect from "@/lib/database/connect";
-import { EventDB, GroupDB, ScheduleDB, StageDB, TeamDB } from "@/lib/database/schema";
+import { EventDB, GroupDB, PlayerDB, ScheduleDB, StageDB, TeamDB } from "@/lib/database/schema";
 
 export type EventData = {
-    event: string;
-    stage: string;
-    group: string;
-    slot: string;
-    team: string;
-    email: string;
-  };
-  
+  event: string;
+  stage: string;
+  group: string;
+  slot: string;
+  team: string;
+  email: string;
+  players: { name: string; uid: string; email?: string }[];
+};
+
 export type ScheduleData = {
-    event: string;
-    stage: string;
-    group: string;
-    matchNo: number;
-    map: string;
-    startTime: string;
-    date: string;
+  event: string;
+  stage: string;
+  group: string;
+  matchNo: number;
+  map: string;
+  startTime: string;
+  date: string;
 };
 
 connect();
-export async function ImportDataDB(data: EventData[] | ScheduleData[], type: "event" | "schedule") {
-    if (type === "event") {
-      const eventData = data as EventData[];
-  
-      for (const entry of eventData) {
-        let event = await EventDB.findOne({ name: entry.event });
-        if (!event) {
-          event = await EventDB.create({ name: entry.event, stage: [] });
-        }
-  
-        let stage = await StageDB.findOne({ name: entry.stage, event: event._id });
-        if (!stage) {
-          stage = await StageDB.create({
-            name: entry.stage,
-            event: event._id,
-            group: [],
-          });
-          event.stage.push(stage._id);
-        }
-  
-        let group = await GroupDB.findOne({
-          name: entry.group,
-          stage: stage._id,
-          event: event._id,
-        });
-        if (!group) {
-          group = await GroupDB.create({
-            event: event._id,
-            stage: stage._id,
-            name: entry.group,
-            schedule: [],
-          });
-          stage.group.push(group._id);
-        }
-  
-          const team = await TeamDB.create({
-            event: event._id,
-            stage: stage._id,
-            group: group._id,
-            slot: entry.slot,
-            name: entry.team,
-            email: entry.email,
-          });
 
-            group.team.push(team._id);
+export async function ImportDataDB(
+  data: EventData[] | ScheduleData[],
+  type: "event" | "schedule"
+) {
+  if (type === "event") {
+    const eventData = data as EventData[];
 
-          console.log(`Inserted team: ${team.name} in group: ${group.name}`);
-  
-        await group.save();
-        await event.save();
-        await stage.save();
+    for (const entry of eventData) {
+      let event = await EventDB.findOne({ name: entry.event });
+      if (!event) {
+        event = await EventDB.create({ name: entry.event, stage: [] });
       }
-    } else if (type === "schedule") {
-      const scheduleData = data as ScheduleData[];
-      
-      for (const entry of scheduleData) {
-        const event = await EventDB.findOne({ name: entry.event });
-        if (!event) {
-          throw new Error(`Event '${entry.event}' does not exist.`);
-        }
-  
-        const stage = await StageDB.findOne({ name: entry.stage, event: event._id });
-        if (!stage) {
-          throw new Error(
-            `Stage '${entry.stage}' does not exist for event '${entry.event}'.`
-          );
-        }
-  
-        const group = await GroupDB.findOne({
+
+      let stage = await StageDB.findOne({ name: entry.stage, event: event._id });
+      if (!stage) {
+        stage = await StageDB.create({
+          name: entry.stage,
+          event: event._id,
+          group: [],
+        });
+        event.stage.push(stage._id);
+      }
+
+      let group = await GroupDB.findOne({
+        name: entry.group,
+        stage: stage._id,
+        event: event._id,
+      });
+      if (!group) {
+        group = await GroupDB.create({
+          event: event._id,
+          stage: stage._id,
           name: entry.group,
-          stage: stage._id,
-          event: event._id,
+          schedule: [],
         });
-        if (!group) {
-          throw new Error(
-            `Group '${entry.group}' does not exist for stage '${stage.name}' and event '${event.name}'.`
-          );
-        }
-  
-        const schedule = await ScheduleDB.create({
-          event: event._id,
-          stage: stage._id,
-          group: group._id,
-          matchNo: entry.matchNo,
-          map: entry.map,
-          startTime: entry.startTime,
-          date: entry.date,
-        });
-  
-        group.schedule.push(schedule._id);
-        await group.save();
-  
-        console.log(`Inserted schedule data for match number: ${entry.matchNo}`);
+        stage.group.push(group._id);
       }
+
+      const team = await TeamDB.create({
+        event: event._id,
+        stage: stage._id,
+        group: group._id,
+        slot: entry.slot,
+        name: entry.team,
+        email: entry.email,
+      });
+      group.team.push(team._id);
+
+      if (
+        entry.players.length < 4 ||
+        entry.players.length > 6
+      ) {
+        throw new Error(
+          `Team '${entry.team}' must have between 4 and 6 players. Found: ${entry.players.length}`
+        );
+      }
+
+      for (const player of entry.players) {
+        const playerEntry = await PlayerDB.create({
+          team: team._id,
+          name: player.name,
+          uid: player.uid,
+          email: player.email,
+        });
+        team.player.push(playerEntry._id);
+        console.log(
+          `Inserted player '${player.name}' with UID '${player.uid}' for team '${team.name}'`
+        );
+      }
+
+      await team.save();
+      await group.save();
+      await event.save();
+      await stage.save();
+    }
+  } else if (type === "schedule") {
+    const scheduleData = data as ScheduleData[];
+
+    for (const entry of scheduleData) {
+      const event = await EventDB.findOne({ name: entry.event });
+      if (!event) {
+        throw new Error(`Event '${entry.event}' does not exist.`);
+      }
+
+      const stage = await StageDB.findOne({ name: entry.stage, event: event._id });
+      if (!stage) {
+        throw new Error(
+          `Stage '${entry.stage}' does not exist for event '${entry.event}'.`
+        );
+      }
+
+      const group = await GroupDB.findOne({
+        name: entry.group,
+        stage: stage._id,
+        event: event._id,
+      });
+      if (!group) {
+        throw new Error(
+          `Group '${entry.group}' does not exist for stage '${stage.name}' and event '${event.name}'.`
+        );
+      }
+
+      const schedule = await ScheduleDB.create({
+        event: event._id,
+        stage: stage._id,
+        group: group._id,
+        matchNo: entry.matchNo,
+        map: entry.map,
+        startTime: entry.startTime,
+        date: entry.date,
+      });
+
+      group.schedule.push(schedule._id);
+      await group.save();
+
+      console.log(`Inserted schedule data for match number: ${entry.matchNo}`);
     }
   }
+}
+
 
 export async function getEventData() {
   const events = await EventDB.find({}).populate("stage");

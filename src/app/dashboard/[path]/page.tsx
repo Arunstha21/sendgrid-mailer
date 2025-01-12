@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut } from "lucide-react";
 import { GetProfileData, User, logout } from "@/server/user";
+import ResultTabs from "../components/resultView/resultsTab";
 
 
 
@@ -46,10 +47,11 @@ export default  function Task() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between mb-8">
       <Tabs defaultValue={currentPath} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="new">Compose New</TabsTrigger>
           <TabsTrigger value="event">Compose for Event</TabsTrigger>
           <TabsTrigger value="import">Import Data</TabsTrigger>
+          <TabsTrigger value="results">Results</TabsTrigger>
         </TabsList>
         <TabsContent value="new">
           <New />
@@ -59,6 +61,9 @@ export default  function Task() {
         </TabsContent>
         <TabsContent value="import">
           <ImportData />
+        </TabsContent>
+        <TabsContent value="results">
+          <ResultTabs />
         </TabsContent>
       </Tabs>
       <div className="ml-6 mt-1">
