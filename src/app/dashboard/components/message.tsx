@@ -21,6 +21,7 @@ export type IDPass = {
   startTime: string
   date: string
   group: string
+  groupName: string
   groupings: Groupings[]
 }
 
@@ -28,6 +29,7 @@ export type Grouping = {
   event: string
   stage: string
   group: string
+  groupName: string
   matches: Matches[]
   groupings: Groupings[]
 }
@@ -41,6 +43,7 @@ export default function EventMessage({ type, data }: Props) {
   if (!data) {
     return <p>No data available</p>;
   }
+  
 
   const tableStyle = {
     borderCollapse: 'collapse',
@@ -64,13 +67,14 @@ export default function EventMessage({ type, data }: Props) {
   if (type === "ID Pass") {
     const idPass = data as IDPass
     return (
-      <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto', padding: '20px' }} contentEditable="plaintext-only">
+      <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+        <span contentEditable="true" suppressContentEditableWarning>
         <p>Hi Team,</p>
         <p>{idPass.event} of {idPass.stage}</p>
         <p>Match {idPass.matchNo} for your group is scheduled for {idPass.date} at {idPass.startTime}.</p>
         <p>{`Please be on time and don't forget to stay in your specific slot.`}</p>
         <p>Please find the match credentials below:</p>
-        
+        </span>
         <h3>Match Credentials</h3>
         <table style={tableStyle}>
           <tbody>
@@ -97,7 +101,7 @@ export default function EventMessage({ type, data }: Props) {
           </tbody>
         </table>
 
-        <h3>Groupings:-</h3>
+        <h3>Groupings of {idPass.groupName}:-</h3>
         <table style={tableStyle}>
           <thead>
             <tr>
@@ -114,11 +118,12 @@ export default function EventMessage({ type, data }: Props) {
             ))}
           </tbody>
         </table>
-
+        <span contentEditable="true" suppressContentEditableWarning>
         <p>Join our discord server if you need any help or have any queries.</p>
         <p>Join Discord Server</p>
         <p>Good luck!</p>
-        <p>Yours truly,<br />Horaa Esports</p>
+        <p>Yours truly,<br/>Horaa Esports</p>
+        </span>
       </div>
     )
   }
@@ -127,10 +132,12 @@ export default function EventMessage({ type, data }: Props) {
     const grouping = data as Grouping
     return (
       <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+        <span contentEditable="true" suppressContentEditableWarning>
         <p>Hi Team,</p>
         <p>Reminder! for {grouping.event} of {grouping.stage}. Here are the details for your matches.</p>
 
         <h3>Matches :-</h3>
+        </span>
         <table style={tableStyle}>
           <thead>
             <tr>
@@ -151,10 +158,10 @@ export default function EventMessage({ type, data }: Props) {
             ))}
           </tbody>
         </table>
-
+        <span contentEditable="true" suppressContentEditableWarning>
         <p>Join our discord server to view the schedule and more!</p>
-
-        <h3>Groupings:-</h3>
+        </span>
+        <h3>Groupings of {grouping.groupName}:-</h3>
         <table style={tableStyle}>
           <thead>
             <tr>
@@ -172,10 +179,12 @@ export default function EventMessage({ type, data }: Props) {
           </tbody>
         </table>
 
+        <span contentEditable="true" suppressContentEditableWarning>
         <p>Join Discord Server</p>
         <p>Top 5 teams from each group will qualify for the next round.</p>
         <p>Need help, or have questions? Join our discord server and ask for help in the #queries channel.</p>
         <p>Yours truly,<br />Horaa Esports</p>
+        </span>
       </div>
     )
   }

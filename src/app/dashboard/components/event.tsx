@@ -170,6 +170,7 @@ export default function Event() {
         startTime,
         date,
         group,
+        groupName: groupList.find((g) => g.id === group)?.name,
         groupings,
       } as IDPass);
     } else {
@@ -177,6 +178,7 @@ export default function Event() {
         event: eventList.find((e) => e.id === event)?.name,
         stage: stageList.find((s) => s.id === stage)?.name,
         group,
+        groupName: groupList.find((g) => g.id === group)?.name,
         matches,
         groupings,
       } as Grouping);
