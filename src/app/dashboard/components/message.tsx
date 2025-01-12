@@ -120,7 +120,8 @@ export default function EventMessage({ type, data }: Props) {
         </table>
         <span contentEditable="true" suppressContentEditableWarning>
         <p>Join our discord server if you need any help or have any queries.</p>
-        <p>Join Discord Server</p>
+        <p>Link: https://discord.gg/XxZgHAn2pJ</p>
+        <br/>
         <p>Good luck!</p>
         <p>Yours truly,<br/>Horaa Esports</p>
         </span>
@@ -160,6 +161,7 @@ export default function EventMessage({ type, data }: Props) {
         </table>
         <span contentEditable="true" suppressContentEditableWarning>
         <p>Join our discord server to view the schedule and more!</p>
+        <p>Link: https://discord.gg/XxZgHAn2pJ</p>
         </span>
         <h3>Groupings of {grouping.groupName}:-</h3>
         <table style={tableStyle}>
@@ -180,9 +182,9 @@ export default function EventMessage({ type, data }: Props) {
         </table>
 
         <span contentEditable="true" suppressContentEditableWarning>
-        <p>Join Discord Server</p>
         <p>Top 5 teams from each group will qualify for the next round.</p>
         <p>Need help, or have questions? Join our discord server and ask for help in the #queries channel.</p>
+        <br />
         <p>Yours truly,<br />Horaa Esports</p>
         </span>
       </div>

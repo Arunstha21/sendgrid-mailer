@@ -40,6 +40,22 @@ export type EventDataE = {
   stages: Stage[];
 };
 
+
+const subjectTemplate = {
+  idPass : "Lobby Credentials for ${event} - ${stage} - ${group} - Match ${matchNo}",
+  groupings : "Groupings and Timings for ${event} - ${stage} - ${group}"
+}
+
+const interpolateTemplate = (
+  template: string,
+  data: Record<string, string | number | undefined>
+): string => {
+  return template.replace(/\${(.*?)}/g, (_, key) => {
+    const value = data[key.trim()];
+    return value !== undefined ? String(value) : "";
+  });
+};
+
 const defaultSelectedSender = { email: "", name: "" };
 const mapList = ["Erangel", "Miramar", "Sanhok"];
 
@@ -159,30 +175,42 @@ export default function Event() {
 
 
   useEffect(() => {
+    const eventDetails = {
+      event: eventList.find((e) => e.id === event)?.name,
+      stage: stageList.find((s) => s.id === stage)?.name,
+      matchNo: scheduleList.find((s) => s.id === matchNo)?.matchNo,
+      groupName: groupList.find((g) => g.id === group)?.name,
+    }
+
     if (messageType === "ID Pass") {
+      setSubject(interpolateTemplate(subjectTemplate.idPass, {event: eventDetails.event, stage: eventDetails.stage, group: eventDetails.groupName, matchNo: eventDetails.matchNo}));
       setMessageData({
-        event: eventList.find((e) => e.id === event)?.name,
-        stage: stageList.find((s) => s.id === stage)?.name,
-        matchNo: scheduleList.find((s) => s.id === matchNo)?.matchNo,
+        event: eventDetails.event,
+        stage: eventDetails.stage,
+        matchNo: eventDetails.matchNo,
         map,
         matchId: matchId || 0,
         password,
         startTime,
         date,
         group,
-        groupName: groupList.find((g) => g.id === group)?.name,
+        groupName: eventDetails.groupName,
         groupings,
       } as IDPass);
     } else {
+      setSubject(interpolateTemplate(subjectTemplate.groupings, {event: eventDetails.event, stage: eventDetails.stage, group: eventDetails.groupName}));
       setMessageData({
-        event: eventList.find((e) => e.id === event)?.name,
-        stage: stageList.find((s) => s.id === stage)?.name,
+        event: eventDetails.event,
+        stage: eventDetails.stage,
         group,
-        groupName: groupList.find((g) => g.id === group)?.name,
+        groupName: eventDetails.groupName,
         matches,
         groupings,
       } as Grouping);
     }
+
+    console.log(subject);
+    
   }, [
     messageType,
     event,
