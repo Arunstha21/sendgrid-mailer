@@ -1,53 +1,39 @@
-# SendGrid Mailer Application
+# SendGrid Mailer
 
-## Overview
-This application provides a robust platform to manage email communications for events, including composing, scheduling, and sending emails using the SendGrid API. The application is built using modern frameworks like Next.js, React, and TypeScript, and integrates with a MongoDB database for data management.
+SendGrid Mailer is a simple email-sending application built using the SendGrid API. It is designed for managing user accounts, handling events, and sending automated emails with customizable content.
 
 ## Features
 
-- **Compose Emails:** Create and send personalized emails.
-- **Rich Text Editor:** Format emails with a rich text editor.
-- **Event Data Management:** Import and manage event schedules and groupings.
-- **SendGrid Integration:** Seamless email delivery using SendGrid.
-- **Database Integration:** Manage events, stages, groups, schedules, and teams with MongoDB.
+1. **User Authentication:**
+   - Secure login system with JWT token validation.
+   - Middleware to restrict access to certain pages based on roles.
 
-## Directory Structure
-```
-Arunstha21-sendgrid-mailer/
-├── public/
-└── src/
-    ├── app/
-    │   ├── globals.css
-    │   ├── layout.tsx
-    │   ├── page.tsx
-    │   └── dashboard/
-    │       ├── [path]/
-    │       │   └── page.tsx
-    │       └── components/
-    │           ├── EmailChip.tsx
-    │           ├── MultiEmailInput.tsx
-    │           ├── RichEditor.tsx
-    │           ├── dummyData.ts
-    │           ├── event.tsx
-    │           ├── import.tsx
-    │           ├── message.tsx
-    │           └── new.tsx
-    ├── lib/
-    │   ├── utils.ts
-    │   └── database/
-    │       ├── connect.tsx
-    │       └── schema.tsx
-    └── server/
-        ├── database.ts
-        └── sendgrid.ts
-```
+2. **User Management:**
+   - Create new user accounts with the ability to assign administrative privileges.
+   - Simple user interface for managing user credentials.
+
+3. **Email Composition:**
+   - Rich text editor for composing customized email content.
+   - Support for multi-recipient emails (To, BCC).
+
+4. **Event Management:**
+   - Import event data and schedules from `.csv` or `.xlsx` files.
+   - Send emails with event details, including match credentials and groupings.
+
+5. **Data Handling:**
+   - Import event or match data and validate the content before saving to the database.
+   - Display and update match results through an intuitive interface.
+
+6. **Dynamic Dashboard:**
+   - Tabs for composing new emails, importing data, and viewing results.
+   - User-friendly dropdowns for selecting event stages, groups, and matches.
 
 ## Installation
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
-   cd Arunstha21-sendgrid-mailer
+   git clone https://github.com/yourusername/sendgrid-mailer.git
+   cd sendgrid-mailer
    ```
 
 2. Install dependencies:
@@ -56,67 +42,73 @@ Arunstha21-sendgrid-mailer/
    ```
 
 3. Set up environment variables:
-   - Create a `.env` file in the root directory.
+   - Create a `.env` file at the root of the project.
    - Add the following variables:
-     ```env
-     MONGO_URL=<your-mongodb-uri>
-     SENDGRID_API_KEY=<your-sendgrid-api-key>
+     ```
+     SENDGRID_API_KEY=your_sendgrid_api_key
+     JWT_SECRET=your_jwt_secret
      ```
 
-4. Run the development server:
+4. Start the development server:
    ```bash
    npm run dev
    ```
 
-## Components
+5. Visit the application at [http://localhost:3000](http://localhost:3000).
 
-### Core Components
+## Directory Structure
 
-1. **RichEditor:** Provides a rich text editor for composing emails.
-2. **MultiEmailInput:** Allows input of multiple email addresses.
-3. **EmailChip:** Displays individual email addresses as chips.
-4. **Event:** Handles event-related email composition.
-5. **Import:** Facilitates importing event and schedule data from files.
-
-### Backend Modules
-
-1. **Database Module:**
-   - Connects to MongoDB using `mongoose`.
-   - Models: Users, Events, Stages, Groups, Teams, and Schedules.
-
-2. **SendGrid Integration:**
-   - Fetches verified senders.
-   - Sends emails with SendGrid.
+```
+src/
+├── app/
+│   ├── adduser/        # Pages for adding new users.
+│   ├── dashboard/      # Dashboard components for events and matches.
+│   ├── globals.css     # Global styles using Tailwind CSS.
+│   ├── layout.tsx      # Main layout for the application.
+│   └── page.tsx        # Login page.
+├── components/         # Reusable UI components.
+├── lib/
+│   ├── utils.ts        # Utility functions.
+│   └── database/       # Database connection and schema definitions.
+├── middleware.ts       # Middleware for route protection.
+└── server/
+    ├── database.ts     # Database query handlers.
+    ├── sendgrid.ts     # SendGrid API integration.
+    ├── user.ts         # User authentication and role handling.
+```
 
 ## Usage
 
-### Sending Emails
-1. Navigate to the dashboard.
-2. Use the "Compose New" tab to create an email.
-3. Use the "Compose for Event" tab to send event-related emails.
-4. Preview the message and click "Send."
+1. **Login:**
+   - Use the login page to sign in with valid credentials.
 
-### Importing Data
-1. Navigate to the "Import Data" tab.
-2. Upload CSV or Excel files containing event or schedule data.
-3. Validate and import the data into the database.
+2. **Manage Users:**
+   - Navigate to the `/adduser` page to create or manage users.
 
-### Managing Events
-1. Add or edit event data in the "Compose for Event" tab.
-2. View and manage schedules and groupings.
+3. **Send Emails:**
+   - Use the dashboard to compose emails, select recipients, and send messages.
 
-## Requirements
+4. **Import Data:**
+   - Upload event or match data from `.csv` or `.xlsx` files on the "Import Data" tab.
 
-- Node.js
-- MongoDB
-- SendGrid Account
-- Modern browser
+5. **Match Management:**
+   - Use the Match Data Uploader to view and upload match results.
+
+## Technologies Used
+
+- **Frontend:**
+  - Next.js for the web framework.
+  - Tailwind CSS for styling.
+  - React Hook Form for form handling.
+  
+- **Backend:**
+  - SendGrid API for email services.
+  - JWT for authentication.
+  - Node.js and TypeScript for server-side logic.
+
+- **Database:**
+  - Connection logic provided in the `database` module.
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-## Contributing
-
-Feel free to fork the repository and submit pull requests for new features or bug fixes.
-
+This project is licensed under the [MIT License](LICENSE).
