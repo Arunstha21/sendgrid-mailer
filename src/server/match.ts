@@ -266,6 +266,8 @@ export const updateGameData = async (
 
     return { status: "success", message: "Game data successfully updated!" };
   } catch (error) {
+    console.log("Error updating game data:", error);
+    
     return { status: "error", message: "Error updating game data" };
   }
 };
