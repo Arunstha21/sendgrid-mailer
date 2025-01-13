@@ -259,21 +259,21 @@ export default function Event() {
       return;
     }
 
-    if (!matchId || matchId <= 0) {
+    if (messageType=== "ID Pass" && (!matchId || matchId <= 0)) {
       shakeForm();
       setError("Match ID is invalid");
       setLoading(false);
       return;
     }
 
-    if (password === "") {
+    if (messageType=== "ID Pass" && password === "") {
       shakeForm();
       setError("Password is required");
       setLoading(false);
       return;
     }
 
-    if (!map || !date || !startTime) {
+    if (messageType=== "ID Pass" && (!map || !date || !startTime)) {
       shakeForm();
       setError("Match details are missing");
       setLoading(false);
