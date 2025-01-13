@@ -102,6 +102,32 @@ export default function Event() {
   const [groupList, setGroupList] = useState<Group[]>([]);
   const [scheduleList, setScheduleList] = useState<Schedule[]>([]);
 
+  const editableRef = useRef<HTMLDivElement>(null);
+
+  const getEmailContent = async () => {
+    if (editableRef.current) {
+      // Capture raw HTML from the editable div
+      let capturedContent = editableRef.current.innerHTML;
+  
+      // Remove unnecessary attributes and wrappers
+      capturedContent = capturedContent
+        .replace(/contenteditable="[^"]*"/gi, '') // Remove contentEditable
+        .replace(/suppresscontenteditablewarning="[^"]*"/gi, '') // Remove warnings
+        .replace(/\sstyle=""/gi, '') // Remove empty styles
+        .trim(); // Trim whitespace
+  
+      // Define a base template for the email
+      const emailTemplate = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+          ${capturedContent}
+        </div>
+      `;
+  
+      return emailTemplate;
+    }
+    return '';
+  };
+
   useEffect(() => {
     if (error) {
       shakeForm();
@@ -287,15 +313,16 @@ export default function Event() {
       return;
     }
 
-    const emailContent = <EventMessage type={messageType} data={messageData} />;
+    const emailContent = await getEmailContent();;
     const emailData = {
       from: selectedSender.email,
       tos: to,
       bccs: bcc,
       subject,
-      message: ReactDOMServer.renderToStaticMarkup(emailContent),
+      message: emailContent,
     };
-
+    
+    
 
     try {
       await sendEmail(emailData);
@@ -594,7 +621,9 @@ export default function Event() {
               <Label>Message Preview</Label>
               <div className="mt-2 p-4 border rounded-md bg-gray-50 h-full overflow-auto">
                 {messageData && (
+                  <div ref={editableRef}>
                   <EventMessage type={messageType} data={messageData} />
+                  </div>
                 )}
               </div>
             </div>

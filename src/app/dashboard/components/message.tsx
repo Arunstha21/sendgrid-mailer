@@ -182,7 +182,7 @@ export default function EventMessage({ type, data }: Props) {
         </table>
 
         <span contentEditable="true" suppressContentEditableWarning>
-        <p>Top 5 teams from each group will qualify for the next round.</p>
+        <p>Top 6 teams from each group will qualify for the next round.</p>
         <p>Need help, or have questions? Join our discord server and ask for help in the #queries channel.</p>
         <br />
         <p>Yours truly,<br />Horaa Esports</p>
