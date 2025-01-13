@@ -151,26 +151,41 @@ export default function Event() {
     fetchGroupData();
   }, [stage]);
 
+  function formatDate(date: string) {
+    const [day , month, year] = date.split("-");
+    const dayInt = parseInt(day);
+    const suffix = ["th", "st", "nd", "rd"][
+      dayInt % 10 > 3 || [11, 12, 13].includes(dayInt % 100) ? 0 : dayInt % 10
+    ];
+    const formattedDate = `${day}${suffix} ${new Date(`${year}-${month}-${day}`).toLocaleString("en-GB", { month: "short" })}`;
+    return formattedDate;
+  }
+
+  function formatTime(time: string) {
+    const formattedTime = new Date(`1970-01-01T${time}`).toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    return formattedTime;
+  }
+
+
   useEffect(()=>{
     const match = scheduleList.find((s) => s.id === matchNo);
     if (match) {
-      const [day , month, year] = match.date.split("-");
-      const dayInt = parseInt(day);
-      const suffix = ["th", "st", "nd", "rd"][
-        dayInt % 10 > 3 || [11, 12, 13].includes(dayInt % 100) ? 0 : dayInt % 10
-      ];
-      const formattedDate = `${day}${suffix} ${new Date(`${year}-${month}-${day}`).toLocaleString("en-GB", { month: "short" })}`;
-      
-      const formattedTime = new Date(`1970-01-01T${match.startTime}`).toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
+
+      const formattedDate = formatDate(match.date);
+
+      const formattedTime = formatTime(match.startTime);
   
       setStartTime(formattedTime || "");
       setDate(formattedDate || "");
       setMap(match.map || "");
     }
+
+
   },[matchNo])
 
 
@@ -208,8 +223,6 @@ export default function Event() {
         groupings,
       } as Grouping);
     }
-
-    console.log(subject);
     
   }, [
     messageType,
@@ -300,8 +313,8 @@ export default function Event() {
     const matches = scheduleData.map((schedule) => {
       return {
         map: schedule.map,
-        date: schedule.date,
-        startTime: schedule.startTime,
+        date: formatDate(schedule.date),
+        startTime: formatTime(schedule.startTime),
       };
     });
 

@@ -56,12 +56,12 @@ export default function ImportData() {
 
         const players = extractPlayers(item);
         const hasValidPlayers =
-          players.length >= 4 &&
+          players.length >= 3 &&
           players.length <= 6 &&
           players.every(
             (player) => "name" in player && "uid" in player && "email" in player
           );
-
+          
         return hasBaseFields && hasValidPlayers;
       });
     } else if (type === "schedule") {
@@ -106,6 +106,8 @@ export default function ImportData() {
           {}
         );
       });
+
+      
 
       if (parsedData.length > 0 && validateData(parsedData, type)) {
         if (type === "event") {

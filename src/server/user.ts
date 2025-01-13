@@ -59,12 +59,12 @@ async function login(userName: string, password: string) {
 
   const userExists = await UserDB.findOne({ userName });
   if (!userExists) {
-    return { status: "error", message: "User does not exist", redirect: "/" };
+    return { status: "error", message: "User Name or Password didn't match" };
   }
 
   const passwordMatch = await bcrypt.compare(password, userExists.password);
   if (!passwordMatch) {
-    return { status: "error", message: "Password is incorrect", redirect: "/" };
+    return { status: "error", message: "User Name or Password didn't match" };
   }
 
 
@@ -84,7 +84,7 @@ async function login(userName: string, password: string) {
     sameSite: "strict",
   });
 
-  return { status: "success", message: "User logged in", redirect: "/dashboard" };
+  return { status: "success", message: "User logged in" };
 }
 
 async function logout() {

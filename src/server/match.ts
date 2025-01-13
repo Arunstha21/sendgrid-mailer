@@ -301,13 +301,11 @@ export const getOverallResults = async (
       }
 
       const validMatchIds = validMatches.map((match) => match._id);
-      console.log(validMatchIds);
       
       // Fetch all relevant team stats
       const teamStats = await TeamStatsDB.find({ match: { $in: validMatchIds } })
         .populate({ path: "team", select: "name group slot", strictPopulate: false })
         .lean();
-      console.log(teamStats);
       
       // Fetch all relevant player stats
       const playerStats = await PlayerStatsDB.find({ match: { $in: validMatchIds } })
@@ -562,7 +560,6 @@ export const getOverallResults = async (
   }> => {
     try {
       const schedules = await ScheduleDB.find({ _id: { $in: scheduleIds } });
-      console.log(schedules);
   
       if (schedules.length === 1) {
         const schedule = schedules[0];

@@ -74,7 +74,7 @@ export async function ImportDataDB(
       group.team.push(team._id);
 
       if (
-        entry.players.length < 4 ||
+        entry.players.length < 3 ||
         entry.players.length > 6
       ) {
         throw new Error(

@@ -34,6 +34,8 @@ const loginSchema = z.object({
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -45,14 +47,25 @@ export default function LoginPage() {
 
   async function onSubmit(data: z.infer<typeof loginSchema>) {
     setError(null)
+    setSuccess(false)
+    setLoading(true)
 
     try {
-      await login(data.userName, data.password)
-
-      router.push('/dashboard/new')
+      await login(data.userName, data.password).then((res)=>{
+        if(res.status === 'success'){
+          router.push('/dashboard/new')
+          setSuccess(true)
+          setLoading(false)
+        }else if(res.status === 'error'){
+          setError(res.message)
+          setLoading(false)
+        }
+      })
+      
     } catch (err:any) {
-        console.error(err)
+      console.error(err)
       setError('Failed to log in. Please check your credentials.')
+      setLoading(false)
     }
   }
 
@@ -92,8 +105,8 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Sign in
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Logging in ..." :"Login"}
               </Button>
             </form>
           </Form>
@@ -104,6 +117,14 @@ export default function LoginPage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+          {
+            success && (
+              <Alert variant="default" className="mt-4 w-full">
+                <AlertDescription>Login successful. Redirecting to dashboard...</AlertDescription>
+              </Alert>
+            )
+          }
+
         </CardFooter>
       </Card>
     </div>
