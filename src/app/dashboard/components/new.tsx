@@ -55,7 +55,7 @@ export default function New() {
     } catch (error: any) {
       shakeForm();
       setError(error.message);
-      console.error('Error sending email:', error.message);
+      console.log('Error sending email:', error.message);
       setLoading(false);
     }
   };

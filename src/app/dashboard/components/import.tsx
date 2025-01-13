@@ -221,7 +221,7 @@ export default function ImportData() {
         )}
       </div>
 
-      <MatchDataUploader />
+      <MatchDataUploader setErrorMessage={setError}/>
       {error && <p className="text-red-500">{error}</p>}
       {isLoading && <p>Loading...</p>}
     </div>

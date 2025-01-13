@@ -40,7 +40,7 @@ async function fetchSenders(): Promise<Sender[]> {
     response.statusCode = 200;
     return body as Sender[];
   } catch (error: any) {
-    console.error('Error fetching sender list:', error.response?.body || error.message);
+    console.log('Error fetching sender list:', error.response?.body || error.message);
     throw new Error('Unable to fetch sender list.');
   }
 }
@@ -51,7 +51,7 @@ export async function getEmailList(): Promise<from[]> {
     const senders = await fetchSenders();
     return senders.map(sender => sender.from);
   } catch (error: any) {
-    console.error('Error fetching email list:', error.message);
+    console.log('Error fetching email list:', error.message);
     throw new Error('Unable to retrieve email list.');
   }
 }
@@ -68,7 +68,7 @@ export async function sendEmail(emailData: EmailData): Promise<string> {
       throw new Error(`Sender email '${from}' is not verified.`);
     }
   } catch (error) {
-    console.error('Error verifying sender:', error instanceof Error ? error.message : error);
+    console.log('Error verifying sender:', error instanceof Error ? error.message : error);
     throw new Error('Unable to verify sender email.');
   }
 
@@ -97,9 +97,9 @@ export async function sendEmail(emailData: EmailData): Promise<string> {
     console.log('Mail sent successfully.');
     return 'Mail sent successfully.';
   } catch (error : any) {
-    console.error('Error sending email:', error);
+    console.log('Error sending email:', error);
     if (error.response) {
-      console.error('Response details:', error.response.body);
+      console.log('Response details:', error.response.body);
     }
     throw new Error('Failed to send email. Please check the logs for details.');
   }

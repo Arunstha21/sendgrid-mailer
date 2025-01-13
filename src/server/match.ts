@@ -87,7 +87,7 @@ export interface MatchData {
 export const updateGameData = async (
   data: MatchData,
   scheduleId: string
-): Promise<void> => {
+): Promise<{status: string; message: string}> => {
   try {
     const {
       GameID,
@@ -99,7 +99,16 @@ export const updateGameData = async (
       TeamInfoList
     } = data.allinfo;
 
-    const schedule = await ScheduleDB.findById(scheduleId);
+    const gameExists = await MatchDB.findOne({ gameId: GameID });
+    if (gameExists) {
+      return { status: "error", message: "Game data already exists" };
+    }
+
+    const schedule = await ScheduleDB.findById(scheduleId).populate({path: "group", strictPopulate: false});
+    if (!schedule) {
+      return { status: "error", message: "Schedule not found" };
+    }
+
     const event = await EventDB.findById(schedule.event);
 
     // Update MatchDB
@@ -123,69 +132,68 @@ export const updateGameData = async (
       { upsert: true, new: true }
     );
 
-    schedule.match = match._id;
-    await schedule.save();
-
     if (!match) {
-      throw new Error("Failed to update or create match.");
+      return { status: "error", message: "Error updating match data" };
     }
 
-    const teamStatsMap: Record<string, any> = {};
 
-    for (const player of TotalPlayerList) {
-        const playerDoc = await PlayerDB.findOne({ uid: player.uId }).select("_id team");
-        if (!playerDoc) {
-          console.warn(`Player with uid ${player.uId} not found, skipping.`);
-          continue;
-        }
+    schedule.match = match._id;
+    await schedule.save();
+    
+    const teams = schedule.group.team;
+    
+    teams.forEach(async (team: string) => {
+      const playerList = await PlayerDB.find({ team });
+      const teamStatsMap: Record<string, any> = {};
+
+      for (const player of playerList) {
       
-        if (!playerDoc.team) {
-          console.warn(`Player with uid ${player.uId} has no team, skipping.`);
-          continue; // Skip players without a valid team
+        const playerData = TotalPlayerList.find((p) => p.uId.toString() === player.uid);
+        if (!playerData) {
+          console.warn(`Player with uid ${player.uid} not found in match data, skipping.`);
+          return { status: "error", message: "Player not found in match data" };
         }
-      
         const playerStats = {
-          player: playerDoc._id,
+          player: player._id,
           match: match._id,
-          killNum: player.killNum,
-          killNumBeforeDie: player.killNumBeforeDie,
-          gotAirDropNum: player.gotAirDropNum,
-          maxKillDistance: player.maxKillDistance,
-          damage: player.damage,
-          killNumInVehicle: player.killNumInVehicle,
-          killNumByGrenade: player.killNumByGrenade,
-          AIKillNum: player.AIKillNum,
-          BossKillNum: player.BossKillNum,
-          rank: player.rank,
-          inDamage: player.inDamage,
-          heal: player.heal,
-          headShotNum: player.headShotNum,
-          survivalTime: player.survivalTime,
-          driveDistance: player.driveDistance,
-          marchDistance: player.marchDistance,
-          assists: player.assists,
-          knockouts: player.knockouts,
-          rescueTimes: player.rescueTimes,
-          useSmokeGrenadeNum: player.useSmokeGrenadeNum,
-          useFragGrenadeNum: player.useFragGrenadeNum,
-          useBurnGrenadeNum: player.useBurnGrenadeNum,
-          useFlashGrenadeNum: player.useFlashGrenadeNum,
-          PoisonTotalDamage: player.PoisonTotalDamage,
-          UseSelfRescueTime: player.UseSelfRescueTime,
-          UseEmergencyCallTime: player.UseEmergencyCallTime,
-        };
-      
+          killNum: playerData.killNum,
+          killNumBeforeDie: playerData.killNumBeforeDie,
+          gotAirDropNum: playerData.gotAirDropNum,
+          maxKillDistance: playerData.maxKillDistance,
+          damage: playerData.damage,
+          killNumInVehicle: playerData.killNumInVehicle,
+          killNumByGrenade: playerData.killNumByGrenade,
+          AIKillNum: playerData.AIKillNum,
+          BossKillNum: playerData.BossKillNum,
+          rank: playerData.rank,
+          inDamage: playerData.inDamage,
+          heal: playerData.heal,
+          headShotNum: playerData.headShotNum,
+          survivalTime: playerData.survivalTime,
+          driveDistance: playerData.driveDistance,
+          marchDistance: playerData.marchDistance,
+          assists: playerData.assists,
+          knockouts: playerData.knockouts,
+          rescueTimes: playerData.rescueTimes,
+          useSmokeGrenadeNum: playerData.useSmokeGrenadeNum,
+          useFragGrenadeNum: playerData.useFragGrenadeNum,
+          useBurnGrenadeNum: playerData.useBurnGrenadeNum,
+          useFlashGrenadeNum: playerData.useFlashGrenadeNum,
+          PoisonTotalDamage: playerData.PoisonTotalDamage,
+          UseSelfRescueTime: playerData.UseSelfRescueTime,
+          UseEmergencyCallTime: playerData.UseEmergencyCallTime,
+        }
+
         await PlayerStatsDB.findOneAndUpdate(
-          { player: playerDoc._id, match: match._id },
+          { player: player._id, match: match._id },
           { $set: playerStats },
           { upsert: true }
         );
-      
-        // Accumulate stats for TeamStatsDB
-        const teamId = playerDoc.team.toString();
+
+        const teamId = player.team.toString();
         if (!teamStatsMap[teamId]) {
           teamStatsMap[teamId] = {
-            team: playerDoc.team,
+            team: player.team,
             match: match._id,
             killNum: 0,
             killNumBeforeDie: 0,
@@ -196,7 +204,7 @@ export const updateGameData = async (
             killNumByGrenade: 0,
             AIKillNum: 0,
             BossKillNum: 0,
-            rank: player.rank,
+            rank: playerData.rank,
             inDamage: 0,
             heal: 0,
             headShotNum: 0,
@@ -215,38 +223,37 @@ export const updateGameData = async (
             UseEmergencyCallTime: 0,
           };
         }
-      
+        
         const teamStats = teamStatsMap[teamId];
-        teamStats.killNum += player.killNum;
-        teamStats.killNumBeforeDie += player.killNumBeforeDie;
-        teamStats.gotAirDropNum += player.gotAirDropNum;
-        teamStats.maxKillDistance = Math.max(teamStats.maxKillDistance, player.maxKillDistance);
-        teamStats.damage += player.damage;
-        teamStats.killNumInVehicle += player.killNumInVehicle;
-        teamStats.killNumByGrenade += player.killNumByGrenade;
-        teamStats.AIKillNum += player.AIKillNum;
-        teamStats.BossKillNum += player.BossKillNum;
-        teamStats.rank = Math.min(teamStats.rank, player.rank);
-        teamStats.inDamage += player.inDamage;
-        teamStats.heal += player.heal;
-        teamStats.headShotNum += player.headShotNum;
-        teamStats.survivalTime += player.survivalTime;
-        teamStats.driveDistance += player.driveDistance;
-        teamStats.marchDistance += player.marchDistance;
-        teamStats.assists += player.assists;
-        teamStats.knockouts += player.knockouts;
-        teamStats.rescueTimes += player.rescueTimes;
-        teamStats.useSmokeGrenadeNum += player.useSmokeGrenadeNum;
-        teamStats.useFragGrenadeNum += player.useFragGrenadeNum;
-        teamStats.useBurnGrenadeNum += player.useBurnGrenadeNum;
-        teamStats.useFlashGrenadeNum += player.useFlashGrenadeNum;
-        teamStats.PoisonTotalDamage += player.PoisonTotalDamage;
-        teamStats.UseSelfRescueTime += player.UseSelfRescueTime;
-        teamStats.UseEmergencyCallTime += player.UseEmergencyCallTime;
-      }
-      
+        teamStats.killNum += playerData.killNum;
+        teamStats.killNumBeforeDie += playerData.killNumBeforeDie;
+        teamStats.gotAirDropNum += playerData.gotAirDropNum;
+        teamStats.maxKillDistance = Math.max(teamStats.maxKillDistance, playerData.maxKillDistance);
+        teamStats.damage += playerData.damage;
+        teamStats.killNumInVehicle += playerData.killNumInVehicle;
+        teamStats.killNumByGrenade += playerData.killNumByGrenade;
+        teamStats.AIKillNum += playerData.AIKillNum;
+        teamStats.BossKillNum += playerData.BossKillNum;
+        teamStats.rank = Math.min(teamStats.rank, playerData.rank);
+        teamStats.inDamage += playerData.inDamage;
+        teamStats.heal += playerData.heal;
+        teamStats.headShotNum += playerData.headShotNum;
+        teamStats.survivalTime += playerData.survivalTime;
+        teamStats.driveDistance += playerData.driveDistance;
+        teamStats.marchDistance += playerData.marchDistance;
+        teamStats.assists += playerData.assists;
+        teamStats.knockouts += playerData.knockouts;
+        teamStats.rescueTimes += playerData.rescueTimes;
+        teamStats.useSmokeGrenadeNum += playerData.useSmokeGrenadeNum;
+        teamStats.useFragGrenadeNum += playerData.useFragGrenadeNum;
+        teamStats.useBurnGrenadeNum += playerData.useBurnGrenadeNum;
+        teamStats.useFlashGrenadeNum += playerData.useFlashGrenadeNum;
+        teamStats.PoisonTotalDamage += playerData.PoisonTotalDamage;
+        teamStats.UseSelfRescueTime += playerData.UseSelfRescueTime;
+        teamStats.UseEmergencyCallTime += playerData.UseEmergencyCallTime;
+        
+      };
 
-    // Update TeamStatsDB
     for (const teamId in teamStatsMap) {
       await TeamStatsDB.findOneAndUpdate(
         { team: teamStatsMap[teamId].team, match: teamStatsMap[teamId].match },
@@ -255,9 +262,11 @@ export const updateGameData = async (
       );
     }
 
-    console.log("Game data successfully updated!");
+    });
+
+    return { status: "success", message: "Game data successfully updated!" };
   } catch (error) {
-    console.error("Error updating game data:", error);
+    return { status: "error", message: "Error updating game data" };
   }
 };
 
@@ -293,8 +302,15 @@ export const getOverallResults = async (
   ): Promise<{ teamResults: TeamResult[]; playerResults: PlayerResult[] }> => {
     try {
       const objectIds = matchIds.map((id) => id);
-      
       const validMatches = await MatchDB.find({ _id: { $in: objectIds } });
+      const scheduleDoc : ScheduleDoc | null = await ScheduleDB.findOne({ match: objectIds[0] })
+      .populate("group stage event")
+      .lean<ScheduleDoc>();
+    if (!scheduleDoc) {
+      throw new Error("Schedule not found for the match");
+    }
+      const pointId = scheduleDoc.event.pointSystem;
+      const pointSystem = await PointDB.findById(pointId);
 
       if (validMatches.length !== objectIds.length) {
         throw new Error("Invalid match IDs provided");
@@ -333,8 +349,8 @@ export const getOverallResults = async (
         const teamData = teamResultsMap[teamId];
         teamData.kill += stat.killNum;
         teamData.damage += stat.damage;
-        teamData.placePoint += stat.placePoint;
-        teamData.totalPoint += stat.totalPoint;
+        teamData.placePoint += pointSystem.pointSystem.find((point: {rank:number; point: number; _id: ObjectId}) => point.rank === stat.rank)?.point || 0;
+        teamData.totalPoint += teamData.placePoint + teamData.kill;
         teamData.wwcd += stat.rank === 1 ? 1 : 0;
         teamData.matchesPlayed += 1;
       }
@@ -396,7 +412,7 @@ export const getOverallResults = async (
   
       return { teamResults, playerResults };
     } catch (error) {
-      console.error("Error fetching overall results:", error);
+      console.log("Error fetching overall results:", error);
       throw new Error("Error fetching overall results");
     }
   };
@@ -546,7 +562,7 @@ export const getOverallResults = async (
   
       return { teamResults, playerResults };
     } catch (error) {
-      console.error("Error fetching per-match results:", error);
+      console.log("Error fetching per-match results:", error);
       throw new Error("Error fetching per-match results");
     }
   };
@@ -581,7 +597,7 @@ export const getOverallResults = async (
         return { matchExists: false, data: null };
       }
     } catch (error) {
-      console.error("Error fetching match data:", error);
+      console.log("Error fetching match data:", error);
       return { matchExists: false, data: null };
     }
   };

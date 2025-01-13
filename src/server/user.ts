@@ -16,7 +16,7 @@ export interface User {
 connect();
 
 const jwtSecret = process.env.JWT_SECRET;
-const jwtExpiration = process.env.JWT_EXPIRATION || "20m"; // Default to 20 minutes
+const jwtExpiration = process.env.JWT_EXPIRATION || "1h"; // Default to 20 minutes
 
 
 // Fetch the user profile from the JWT token in cookies
@@ -29,7 +29,7 @@ const GetProfileData = async (): Promise<User> => {
   const token = cookieStore.get("token")?.value;
 
   if (!token) {
-    console.error("No token found in cookies.");
+    console.log("No token found in cookies.");
     redirect("/");
   }
 
@@ -38,7 +38,7 @@ const GetProfileData = async (): Promise<User> => {
     
     return decodedToken as User;
   } catch (error: any) {
-    console.error("JWT verification error:", error.message);
+    console.log("JWT verification error:", error.message);
     redirect("/");
 
     // Return fallback empty user (Optional for type safety)
@@ -108,7 +108,7 @@ async function addUser(userName: string, password: string, superUser: boolean) {
     };
     return { status: "success", message: userData };
   } catch (error: any) {
-    console.error("Error in adding user:", error.message);
+    console.log("Error in adding user:", error.message);
     return { status: "error", message: error.message };
   }
 

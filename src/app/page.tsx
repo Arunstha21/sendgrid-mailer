@@ -63,7 +63,7 @@ export default function LoginPage() {
       })
       
     } catch (err:any) {
-      console.error(err)
+      console.log(err)
       setError('Failed to log in. Please check your credentials.')
       setLoading(false)
     }

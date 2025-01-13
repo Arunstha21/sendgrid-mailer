@@ -12,7 +12,7 @@ import { Upload, Check } from 'lucide-react'
 import { MatchData, PlayerResult, TeamResult, getMatchData, updateGameData } from "@/server/match"
 import { MatchDataDialog } from "./resultView/match-data-dialogue"
 
-export default function MatchDataUploader() {
+export default function MatchDataUploader({setErrorMessage}: {setErrorMessage: (message: string | null) => void}) {
   const [event, setEvent] = useState<string>("")
   const [stage, setStage] = useState<string>("")
   const [group, setGroup] = useState<string>("")
@@ -39,10 +39,12 @@ export default function MatchDataUploader() {
             const jsonData: MatchData = JSON.parse(result)
             setMatchData(jsonData)
           } else {
-            throw new Error("Unexpected file content format.")
+            setErrorMessage("Error parsing JSON file")
+            return;
           }
         } catch (err) {
-          console.error("Error parsing JSON file:", (err as Error).message)
+          console.log("Error parsing JSON file:", (err as Error).message)
+          setErrorMessage(`Error parsing JSON file ${(err as Error).message}`)
           setIsMatchDataUploaded(false)
         }
       }
@@ -54,17 +56,27 @@ export default function MatchDataUploader() {
     if (matchData) {
       sendMatchData(matchData)
     } else {
-      console.error("No match data to upload")
+      setErrorMessage("No match data found")
     }
   }
 
   const sendMatchData = async (data: MatchData): Promise<void> => {
     if(matchNo){
         setUploading(true);
-        await updateGameData(data, matchNo)
+        await updateGameData(data, matchNo).then((res) => {
+          if(res.status === "error"){
+            setErrorMessage(res.message)
+            setIsMatchDataUploaded(false)
+          }else if(res.status === "success"){
+            setIsMatchDataUploaded(true)
+          }
+        }).catch((err) => {
+          setErrorMessage(err.message)
+          setIsMatchDataUploaded(false)
+        }).finally(() => {
         handleMatchChange(matchNo)
-        setIsMatchDataUploaded(true)
         setUploading(false);
+        })
     }
   }
 
@@ -110,6 +122,7 @@ export default function MatchDataUploader() {
 
   const handleMatchChange = async (matchId: string) => {
     setResultData(null)
+    setErrorMessage(null)
     setMatchNo(matchId)
     
     const resultsData = await getMatchData([matchId]);

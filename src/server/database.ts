@@ -161,7 +161,7 @@ export async function getEventData() {
       }),
     };
   });
-  return data;
+  return data || [];
 }
 
 export type Group = {
@@ -203,7 +203,7 @@ export type Group = {
   
       return groups;
     } catch (error) {
-      console.error("Error fetching group data:", error);
+      console.log("Error fetching group data:", error);
       throw new Error("Failed to fetch group data.");
     }
   }
@@ -241,7 +241,7 @@ export type Group = {
       
           return schedules;
         } catch (error) {
-          console.error("Error fetching schedule data:", error);
+          console.log("Error fetching schedule data:", error);
           throw new Error("Failed to fetch schedule data.");
         }
       }
