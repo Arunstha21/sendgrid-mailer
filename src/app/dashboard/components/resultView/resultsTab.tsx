@@ -84,7 +84,7 @@ export default function ResultTabs() {
         setShowResultData({ teamResults: [], playerResults: [] });
       }
     }
-  }, [resultType]);
+  }, [resultType, resultData]);
 
   useEffect(() => {
     async function fetchGroupData() {

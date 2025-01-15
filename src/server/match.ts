@@ -98,6 +98,7 @@ export const updateGameData = async (
       TotalPlayerList,
       TeamInfoList
     } = data.allinfo;
+    
 
     const gameExists = await MatchDB.findOne({ gameId: GameID });
     if (gameExists) {
@@ -144,56 +145,62 @@ export const updateGameData = async (
     
     teams.forEach(async (team: string) => {
       const playerList = await PlayerDB.find({ team });
-      const teamStatsMap: Record<string, any> = {};
-
-      for (const player of playerList) {
       
-        const playerData = TotalPlayerList.find((p) => p.uId.toString() === player.uid);
+      const teamStatsMap: Record<string, any> = {};
+      const playerMap = new Map(playerList.map((p) => [p.uid.toString(), p]));
+      
+      for (const player of TotalPlayerList){
+        
+        const playerData = playerMap.get(player.uId.toString());
+        console.log(playerData);
+        
+        // const playerData = playerList.find((p) =>{p.uid.toString() === player.uId.toString()});
         if (!playerData) {
-          console.warn(`Player with uid ${player.uid} not found in match data, skipping.`);
+          console.warn(`Player with uid ${player.uId} not found in match data, skipping.`);
           continue;
         }
+
         const playerStats = {
-          player: player._id,
+          player: playerData._id,
           match: match._id,
-          killNum: playerData.killNum,
-          killNumBeforeDie: playerData.killNumBeforeDie,
-          gotAirDropNum: playerData.gotAirDropNum,
-          maxKillDistance: playerData.maxKillDistance,
-          damage: playerData.damage,
-          killNumInVehicle: playerData.killNumInVehicle,
-          killNumByGrenade: playerData.killNumByGrenade,
-          AIKillNum: playerData.AIKillNum,
-          BossKillNum: playerData.BossKillNum,
-          rank: playerData.rank,
-          inDamage: playerData.inDamage,
-          heal: playerData.heal,
-          headShotNum: playerData.headShotNum,
-          survivalTime: playerData.survivalTime,
-          driveDistance: playerData.driveDistance,
-          marchDistance: playerData.marchDistance,
-          assists: playerData.assists,
-          knockouts: playerData.knockouts,
-          rescueTimes: playerData.rescueTimes,
-          useSmokeGrenadeNum: playerData.useSmokeGrenadeNum,
-          useFragGrenadeNum: playerData.useFragGrenadeNum,
-          useBurnGrenadeNum: playerData.useBurnGrenadeNum,
-          useFlashGrenadeNum: playerData.useFlashGrenadeNum,
-          PoisonTotalDamage: playerData.PoisonTotalDamage,
-          UseSelfRescueTime: playerData.UseSelfRescueTime,
-          UseEmergencyCallTime: playerData.UseEmergencyCallTime,
+          killNum: player.killNum,
+          killNumBeforeDie: player.killNumBeforeDie,
+          gotAirDropNum: player.gotAirDropNum,
+          maxKillDistance: player.maxKillDistance,
+          damage: player.damage,
+          killNumInVehicle: player.killNumInVehicle,
+          killNumByGrenade: player.killNumByGrenade,
+          AIKillNum: player.AIKillNum,
+          BossKillNum: player.BossKillNum,
+          rank: player.rank,
+          inDamage: player.inDamage,
+          heal: player.heal,
+          headShotNum: player.headShotNum,
+          survivalTime: player.survivalTime,
+          driveDistance: player.driveDistance,
+          marchDistance: player.marchDistance,
+          assists: player.assists,
+          knockouts: player.knockouts,
+          rescueTimes: player.rescueTimes,
+          useSmokeGrenadeNum: player.useSmokeGrenadeNum,
+          useFragGrenadeNum: player.useFragGrenadeNum,
+          useBurnGrenadeNum: player.useBurnGrenadeNum,
+          useFlashGrenadeNum: player.useFlashGrenadeNum,
+          PoisonTotalDamage: player.PoisonTotalDamage,
+          UseSelfRescueTime: player.UseSelfRescueTime,
+          UseEmergencyCallTime: player.UseEmergencyCallTime,
         }
 
         await PlayerStatsDB.findOneAndUpdate(
-          { player: player._id, match: match._id },
+          { player: playerData._id, match: match._id },
           { $set: playerStats },
           { upsert: true }
         );
 
-        const teamId = player.team.toString();
+        const teamId = playerData.team.toString();
         if (!teamStatsMap[teamId]) {
           teamStatsMap[teamId] = {
-            team: player.team,
+            team: playerData.team,
             match: match._id,
             killNum: 0,
             killNumBeforeDie: 0,
@@ -204,7 +211,7 @@ export const updateGameData = async (
             killNumByGrenade: 0,
             AIKillNum: 0,
             BossKillNum: 0,
-            rank: playerData.rank,
+            rank: player.rank,
             inDamage: 0,
             heal: 0,
             headShotNum: 0,
@@ -226,32 +233,32 @@ export const updateGameData = async (
         
         const teamStats = teamStatsMap[teamId];
         
-        teamStats.killNum += playerData.killNum;
-        teamStats.killNumBeforeDie += playerData.killNumBeforeDie;
-        teamStats.gotAirDropNum += playerData.gotAirDropNum;
-        teamStats.maxKillDistance = Math.max(teamStats.maxKillDistance, playerData.maxKillDistance);
-        teamStats.damage += playerData.damage;
-        teamStats.killNumInVehicle += playerData.killNumInVehicle;
-        teamStats.killNumByGrenade += playerData.killNumByGrenade;
-        teamStats.AIKillNum += playerData.AIKillNum;
-        teamStats.BossKillNum += playerData.BossKillNum;
-        teamStats.rank = Math.min(teamStats.rank, playerData.rank);
-        teamStats.inDamage += playerData.inDamage;
-        teamStats.heal += playerData.heal;
-        teamStats.headShotNum += playerData.headShotNum;
-        teamStats.survivalTime += playerData.survivalTime;
-        teamStats.driveDistance += playerData.driveDistance;
-        teamStats.marchDistance += playerData.marchDistance;
-        teamStats.assists += playerData.assists;
-        teamStats.knockouts += playerData.knockouts;
-        teamStats.rescueTimes += playerData.rescueTimes;
-        teamStats.useSmokeGrenadeNum += playerData.useSmokeGrenadeNum;
-        teamStats.useFragGrenadeNum += playerData.useFragGrenadeNum;
-        teamStats.useBurnGrenadeNum += playerData.useBurnGrenadeNum;
-        teamStats.useFlashGrenadeNum += playerData.useFlashGrenadeNum;
-        teamStats.PoisonTotalDamage += playerData.PoisonTotalDamage;
-        teamStats.UseSelfRescueTime += playerData.UseSelfRescueTime;
-        teamStats.UseEmergencyCallTime += playerData.UseEmergencyCallTime;
+        teamStats.killNum += player.killNum;
+        teamStats.killNumBeforeDie += player.killNumBeforeDie;
+        teamStats.gotAirDropNum += player.gotAirDropNum;
+        teamStats.maxKillDistance = Math.max(teamStats.maxKillDistance, player.maxKillDistance);
+        teamStats.damage += player.damage;
+        teamStats.killNumInVehicle += player.killNumInVehicle;
+        teamStats.killNumByGrenade += player.killNumByGrenade;
+        teamStats.AIKillNum += player.AIKillNum;
+        teamStats.BossKillNum += player.BossKillNum;
+        teamStats.rank = Math.min(teamStats.rank, player.rank);
+        teamStats.inDamage += player.inDamage;
+        teamStats.heal += player.heal;
+        teamStats.headShotNum += player.headShotNum;
+        teamStats.survivalTime += player.survivalTime;
+        teamStats.driveDistance += player.driveDistance;
+        teamStats.marchDistance += player.marchDistance;
+        teamStats.assists += player.assists;
+        teamStats.knockouts += player.knockouts;
+        teamStats.rescueTimes += player.rescueTimes;
+        teamStats.useSmokeGrenadeNum += player.useSmokeGrenadeNum;
+        teamStats.useFragGrenadeNum += player.useFragGrenadeNum;
+        teamStats.useBurnGrenadeNum += player.useBurnGrenadeNum;
+        teamStats.useFlashGrenadeNum += player.useFlashGrenadeNum;
+        teamStats.PoisonTotalDamage += player.PoisonTotalDamage;
+        teamStats.UseSelfRescueTime += player.UseSelfRescueTime;
+        teamStats.UseEmergencyCallTime += player.UseEmergencyCallTime;
         
       };
 
@@ -263,7 +270,8 @@ export const updateGameData = async (
       );
     }
 
-    });
+
+      });
 
     return { status: "success", message: "Game data successfully updated!" };
   } catch (error) {
@@ -328,14 +336,22 @@ export const getOverallResults = async (
       
       // Fetch all relevant player stats
       const playerStats = await PlayerStatsDB.find({ match: { $in: validMatchIds } })
-        .populate({ path: "player", select: "name uid team", strictPopulate: false })
-        .populate({ path: "team", select: "name group", strictPopulate: false })
-        .lean();
+      .populate({
+        path: "player",
+        select: "name uid team",
+        populate: {
+          path: "team",
+          select: "name group",
+          strictPopulate: false,
+        },
+        strictPopulate: false,
+      })
+      .lean();
   
       // Aggregate team stats
       const teamResultsMap: Record<string, TeamResult> = {};
   
-      for (const stat of teamStats) {
+      for (const stat of teamStats) {        
         const teamId = stat.team._id.toString();
         if (!teamResultsMap[teamId]) {
           teamResultsMap[teamId] = {
@@ -383,7 +399,7 @@ export const getOverallResults = async (
           playerResultsMap[playerId] = {
             inGameName: stat.player.name || "Unknown Player",
             uId: stat.player.uid || "N/A",
-            teamName: stat.team?.name || "Unknown Team",
+            teamName: stat.player.team.name || "Unknown Team",
             kill: 0,
             damage: 0,
             survivalTime: 0,
