@@ -151,7 +151,7 @@ export const updateGameData = async (
         const playerData = TotalPlayerList.find((p) => p.uId.toString() === player.uid);
         if (!playerData) {
           console.warn(`Player with uid ${player.uid} not found in match data, skipping.`);
-          return { status: "error", message: "Player not found in match data" };
+          continue;
         }
         const playerStats = {
           player: player._id,
@@ -225,6 +225,7 @@ export const updateGameData = async (
         }
         
         const teamStats = teamStatsMap[teamId];
+        
         teamStats.killNum += playerData.killNum;
         teamStats.killNumBeforeDie += playerData.killNumBeforeDie;
         teamStats.gotAirDropNum += playerData.gotAirDropNum;
@@ -362,8 +363,10 @@ export const getOverallResults = async (
       // Sort and rank team results
       teamResults.sort((a, b) => {
         if (a.totalPoint !== b.totalPoint) return b.totalPoint - a.totalPoint;
+        if (a.wwcd !== b.wwcd) return b.wwcd - a.wwcd;
         if (a.placePoint !== b.placePoint) return b.placePoint - a.placePoint;
         if (a.kill !== b.kill) return b.kill - a.kill;
+        if (a.matchesPlayed !== b.matchesPlayed) return a.matchesPlayed - b.matchesPlayed;
         return a.team.localeCompare(b.team);
       });
   
