@@ -184,22 +184,31 @@ export type Group = {
         throw new Error("Stage or groups not found.");
       }
   
-      const groups: Group[] = [];
+      // Extract all group IDs
+      const groupIds = stage.group.map((group: {_id: object}) => group._id);
   
-      for (const group of stage.group) {
-        // Populate teams associated with this group
-        const teams = await TeamDB.find({ group: group._id });
+      // Fetch all teams for these groups in one go
+      const teams = await TeamDB.find({ group: { $in: groupIds } });
   
-        groups.push({
-          id: group._id.toString(),
-          name: group.name,
-          data: teams.map((team) => ({
-            slot: team.slot,
-            team: team.name,
-            email: team.email,
-          })),
+      // Organize teams by group ID
+      const teamsByGroupId: Record<string, any[]> = {};
+      for (const team of teams) {
+        if (!teamsByGroupId[team.group]) {
+          teamsByGroupId[team.group] = [];
+        }
+        teamsByGroupId[team.group].push({
+          slot: team.slot,
+          team: team.name,
+          email: team.email,
         });
       }
+  
+      // Map groups to include their teams
+      const groups: Group[] = stage.group.map((group: {_id: object; name: string}) => ({
+        id: group._id.toString(),
+        name: group.name,
+        data: teamsByGroupId[group._id.toString()] || [],
+      }));
   
       return groups;
     } catch (error) {
@@ -207,6 +216,7 @@ export type Group = {
       throw new Error("Failed to fetch group data.");
     }
   }
+  
   
 
     export type Schedule = {
