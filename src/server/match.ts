@@ -142,6 +142,8 @@ export const updateGameData = async (
     await schedule.save();
     
     const teams = schedule.group.team;
+
+    let unregisteredPlayers: string[] = [];
     
     teams.forEach(async (team: string) => {
       const playerList = await PlayerDB.find({ team });
@@ -152,11 +154,9 @@ export const updateGameData = async (
       for (const player of TotalPlayerList){
         
         const playerData = playerMap.get(player.uId.toString());
-        console.log(playerData);
-        
         // const playerData = playerList.find((p) =>{p.uid.toString() === player.uId.toString()});
         if (!playerData) {
-          console.warn(`Player with uid ${player.uId} not found in match data, skipping.`);
+          unregisteredPlayers = [...unregisteredPlayers, player.uId.toString()];
           continue;
         }
 
@@ -269,10 +269,9 @@ export const updateGameData = async (
         { upsert: true }
       );
     }
-
-
       });
 
+      console.log("Unregistered players:", unregisteredPlayers);
     return { status: "success", message: "Game data successfully updated!" };
   } catch (error) {
     console.log("Error updating game data:", error);
