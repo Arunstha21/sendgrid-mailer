@@ -92,7 +92,7 @@ export default function EventMessage({ type, data }: Props) {
             </tr>
             <tr>
               <td style={headerCellStyle}>Start Time</td>
-              <td style={cellStyle}>{idPass.startTime}</td>
+              <td style={cellStyle} contentEditable suppressContentEditableWarning>{idPass.startTime}</td>
             </tr>
             <tr>
               <td style={headerCellStyle}>Date</td>
