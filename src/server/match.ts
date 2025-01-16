@@ -368,7 +368,7 @@ export const getOverallResults = async (
         teamData.kill += stat.killNum;
         teamData.damage += stat.damage;
         teamData.placePoint += pointSystem.pointSystem.find((point: {rank:number; point: number; _id: ObjectId}) => point.rank === stat.rank)?.point || 0;
-        teamData.totalPoint += teamData.placePoint + teamData.kill;
+        teamData.totalPoint = teamData.placePoint + teamData.kill;
         teamData.wwcd += stat.rank === 1 ? 1 : 0;
         teamData.matchesPlayed += 1;
       }
