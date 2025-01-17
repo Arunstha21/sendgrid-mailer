@@ -84,6 +84,10 @@ export interface MatchData {
   };
 }
 
+function textDecoder(text: string) {
+  return new TextDecoder().decode(new Uint8Array([...text].map(char => char.charCodeAt(0))));
+}
+
 export const updateGameData = async (
   data: MatchData,
   scheduleId: string
@@ -355,7 +359,7 @@ export const getOverallResults = async (
         const teamId = stat.team._id.toString();
         if (!teamResultsMap[teamId]) {
           teamResultsMap[teamId] = {
-            team: stat.team.name || "Unknown Team",
+            team: textDecoder(stat.team.name) || "Unknown Team",
             kill: 0,
             damage: 0,
             placePoint: 0,
@@ -398,11 +402,14 @@ export const getOverallResults = async (
   
       for (const stat of playerStats) {
         const playerId = stat.player._id.toString();
+        const encodedData = new Uint8Array([...stat.player.team.name].map(char => char.charCodeAt(0)));
+        const teamName = new TextDecoder('utf-8').decode(encodedData);
+
         if (!playerResultsMap[playerId]) {
           playerResultsMap[playerId] = {
-            inGameName: stat.player.name || "Unknown Player",
+            inGameName: textDecoder(stat.player.name) || "Unknown Player",
             uId: stat.player.uid || "N/A",
-            teamName: stat.player.team.name || "Unknown Team",
+            teamName: textDecoder(stat.team.name) || "Unknown Team",
             kill: 0,
             damage: 0,
             survivalTime: 0,
@@ -509,7 +516,7 @@ export const getOverallResults = async (
         const teamId = stat.team.slot;
         if (!teamResultsMap[teamId]) {
           teamResultsMap[teamId] = {
-            team: stat.team.name || "Unknown Team",
+            team: textDecoder(stat.team.name) || "Unknown Team",
             kill: 0,
             damage: 0,
             placePoint: 0,
@@ -550,9 +557,9 @@ export const getOverallResults = async (
         const playerId = stat.player._id.toString();
         if (!playerResultsMap[playerId]) {
           playerResultsMap[playerId] = {
-            inGameName: stat.player.name || "Unknown Player",
+            inGameName: textDecoder(stat.player.name) || "Unknown Player",
             uId: stat.player.uid || "N/A",
-            teamName: stat.player.team.name || "Unknown Team",
+            teamName: textDecoder(stat.player.team.name) || "Unknown Team",
             kill: 0,
             damage: 0,
             survivalTime: 0,
