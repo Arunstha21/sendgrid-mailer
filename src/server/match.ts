@@ -402,9 +402,6 @@ export const getOverallResults = async (
   
       for (const stat of playerStats) {
         const playerId = stat.player._id.toString();
-        const encodedData = new Uint8Array([...stat.player.team.name].map(char => char.charCodeAt(0)));
-        const teamName = new TextDecoder('utf-8').decode(encodedData);
-
         if (!playerResultsMap[playerId]) {
           playerResultsMap[playerId] = {
             inGameName: textDecoder(stat.player.name) || "Unknown Player",
