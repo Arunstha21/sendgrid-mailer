@@ -289,6 +289,7 @@ export interface TeamResult {
   wwcd: number;
   matchesPlayed: number;
   cRank?: number;
+  lastMatchRank?: number;
 }
 
 export interface PlayerResult {
@@ -361,6 +362,7 @@ export const getOverallResults = async (
             totalPoint: 0,
             wwcd: 0,
             matchesPlayed: 0,
+            lastMatchRank: stat.rank,
           };
         }
   
@@ -371,6 +373,7 @@ export const getOverallResults = async (
         teamData.totalPoint = teamData.placePoint + teamData.kill;
         teamData.wwcd += stat.rank === 1 ? 1 : 0;
         teamData.matchesPlayed += 1;
+        teamData.lastMatchRank = stat.rank;
       }
   
       const teamResults = Object.values(teamResultsMap);
@@ -381,6 +384,7 @@ export const getOverallResults = async (
         if (a.wwcd !== b.wwcd) return b.wwcd - a.wwcd;
         if (a.placePoint !== b.placePoint) return b.placePoint - a.placePoint;
         if (a.kill !== b.kill) return b.kill - a.kill;
+        if (a.lastMatchRank && b.lastMatchRank && a.lastMatchRank !== b.lastMatchRank) return a.lastMatchRank - b.lastMatchRank;
         if (a.matchesPlayed !== b.matchesPlayed) return a.matchesPlayed - b.matchesPlayed;
         return a.team.localeCompare(b.team);
       });
