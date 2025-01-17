@@ -406,7 +406,7 @@ export const getOverallResults = async (
           playerResultsMap[playerId] = {
             inGameName: textDecoder(stat.player.name) || "Unknown Player",
             uId: stat.player.uid || "N/A",
-            teamName: textDecoder(stat.team.name) || "Unknown Team",
+            teamName: textDecoder(stat.player.team.name) || "Unknown Team",
             kill: 0,
             damage: 0,
             survivalTime: 0,
