@@ -23,6 +23,10 @@ import { from, getEmailList, sendEmail } from "@/server/sendgrid";
 import EventMessage, { Grouping, IDPass } from "./message";
 import { Group, Schedule, getEventData, getGroupData, getScheduleData } from "@/server/database";
 
+function textDecoder(text: string) {
+  return new TextDecoder().decode(new Uint8Array([...text].map(char => char.charCodeAt(0))));
+}
+
 export type Event = {
   id: string;
   name: string;
@@ -359,7 +363,9 @@ export default function Event() {
       groupList
         .find((g) => g.id === groupId)
         ?.data.map((g) => {
-          return { slot: g.slot.toString(), team: g.team };
+
+          const team = textDecoder(g.team);
+          return { slot: g.slot.toString(), team };
         }) || [];
 
     setGroupings(groupings);
