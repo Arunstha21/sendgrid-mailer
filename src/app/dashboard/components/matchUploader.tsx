@@ -240,7 +240,7 @@ export default function MatchDataUploader({setErrorMessage}: {setErrorMessage: (
             </div>
           ) : (
             <>
-            {resultData ?  <MatchDataDialog data={resultData} />: null}
+            {resultData ?  <MatchDataDialog data={resultData} loading={uploading}/>: null}
             </>
             )}
         </div>) : null}

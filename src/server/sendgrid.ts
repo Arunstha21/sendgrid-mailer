@@ -56,6 +56,29 @@ export async function getEmailList(): Promise<from[]> {
   }
 }
 
+function extractInlineImages(message: string) {
+  const imageRegex = /<img\s+src="data:image\/(.*?);base64,(.*?)"(?:\s+alt="(.*?)")?\s*\/?>/g;
+  let match;
+  const attachments = [];
+  let updatedContent = message;
+
+  while ((match = imageRegex.exec(message)) !== null) {
+    const [, mimeType, base64Data, alt] = match;
+    const cid: string = `inline-image-${attachments.length}`;
+    attachments.push({
+      filename: `${alt || 'image'}.${mimeType.split('/')[1]}`,
+      content: base64Data,
+      type: `image/${mimeType}`,
+      disposition: 'inline',
+      content_id: cid,
+    });
+    updatedContent = updatedContent.replace(match[0], `<img src="cid:${cid}" alt="${alt || ''}" />`);
+  }
+
+  return { content: updatedContent, attachments };
+}
+
+
 // Send Email
 export async function sendEmail(emailData: EmailData): Promise<string> {
   const { from, tos, bccs = [], subject, message } = emailData;
@@ -74,6 +97,8 @@ export async function sendEmail(emailData: EmailData): Promise<string> {
 
   const toos = Array.from(new Set([...tos, "prakassapkota123@gmail.com"])).map(email => ({ email }));
 
+  const { content, attachments } = extractInlineImages(message);
+  
   const emailParams = {
     personalizations: [
       {
@@ -86,9 +111,10 @@ export async function sendEmail(emailData: EmailData): Promise<string> {
     content: [
       {
         type: 'text/html',
-        value: message,
+        value: content,
       },
     ],
+    attachments,
   };
 
   try {

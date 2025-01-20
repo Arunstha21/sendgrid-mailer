@@ -14,10 +14,11 @@ import { TournamentResults } from "./columns"
 import { PlayerResult, TeamResult } from "@/server/match"
 
 interface MatchDataDialogProps {
-  data: { teamResults: TeamResult[]; playerResults: PlayerResult[] }
+  data: { teamResults: TeamResult[]; playerResults: PlayerResult[] },
+  loading : boolean
 }
 
-export function MatchDataDialog({ data }: MatchDataDialogProps) {
+export function MatchDataDialog({ data, loading }: MatchDataDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -35,10 +36,10 @@ export function MatchDataDialog({ data }: MatchDataDialogProps) {
             <TabsTrigger value="player-results">Player Results</TabsTrigger>
           </TabsList>
           <TabsContent value="team-results">
-            <TournamentResults data={{ teamResults: data.teamResults, playerResults: [] }} />
+            <TournamentResults data={{ teamResults: data.teamResults, playerResults: [] }} isLoading={loading}/>
           </TabsContent>
           <TabsContent value="player-results">
-            <TournamentResults data={{ teamResults: [], playerResults: data.playerResults }} />
+            <TournamentResults data={{ teamResults: [], playerResults: data.playerResults }} isLoading={loading}/>
           </TabsContent>
         </Tabs>
       </DialogContent>

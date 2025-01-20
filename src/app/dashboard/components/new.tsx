@@ -46,8 +46,8 @@ export default function New() {
       bccs: bcc,
       subject,
       message,
-    }
-
+    };
+    
     try {
       await sendEmail(emailData);
       setSuccess("Email sent successfully!");

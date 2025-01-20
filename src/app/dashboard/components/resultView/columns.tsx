@@ -4,6 +4,7 @@ import React from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { DataTable } from "./data-table"
 import { PlayerResult, TeamResult } from "@/server/match"
+import { SkeletonTable } from "./skeleton-table"
 
 const teamColumns: ColumnDef<TeamResult>[] = [
   {
@@ -91,11 +92,23 @@ const playerColumns: ColumnDef<PlayerResult>[] = [
 
 interface TournamentResultsProps {
   data: { teamResults: TeamResult[]; playerResults: PlayerResult[] }
+  isLoading: boolean
 }
 
-export function TournamentResults({ data }: TournamentResultsProps) {
+export function TournamentResults({ data, isLoading }: TournamentResultsProps) {
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h2 className="text-2xl font-bold mb-4">Loading Results...</h2>
+          <SkeletonTable columns={8} rows={8} />
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-8 ">
+    <div className="space-y-8">
       {data.teamResults.length > 0 && (
         <div>
           <h2 className="text-2xl font-bold mb-4">Team Results</h2>
@@ -111,4 +124,5 @@ export function TournamentResults({ data }: TournamentResultsProps) {
     </div>
   )
 }
+
 

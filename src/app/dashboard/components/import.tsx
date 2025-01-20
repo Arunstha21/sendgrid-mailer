@@ -11,6 +11,7 @@ export default function ImportData() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
   const [importType, setImportType] = useState<"event" | "schedule" | null>(
     null
   );
@@ -168,18 +169,26 @@ export default function ImportData() {
   };
 
   const handleImportToDB = async (): Promise<void> => {
-    try {
+      setError(null);
+      setSuccess(null);
       setIsImporting(true);
       setIsLoading(true);
 
-      await ImportDataDB(data, importType as "event" | "schedule");
-    } catch (err: any) {
-      setError(err.message || "An error occurred during import");
-    } finally {
-      setError(null);
+      await ImportDataDB(data, importType as "event" | "schedule").then((res) => {
+        if (!res) {
+          setError("Failed to import data");
+        }else if (res.status === "error") {
+          setError(res.message);
+        } else if (res.status === "success") {
+          setData([]);
+          setSuccess(res.message);
+        }
+      }).catch((err) => {
+        setError(err.message);
+      }).finally(() => {
       setIsImporting(false);
       setIsLoading(false);
-    }
+    });
   };
 
   return (
@@ -223,6 +232,7 @@ export default function ImportData() {
 
       <MatchDataUploader setErrorMessage={setError}/>
       {error && <p className="text-red-500">{error}</p>}
+      {success && <p className="text-green-500">{success}</p>}
       {isLoading && <p>Loading...</p>}
     </div>
   );

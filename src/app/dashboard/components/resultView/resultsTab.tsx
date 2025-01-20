@@ -29,6 +29,7 @@ export default function ResultTabs() {
   const [group, setGroup] = useState<string>("");
   const [matchNo, setMatchNo] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const [eventData, setEventData] = useState<EventDataE[]>([]);
   const [eventList, setEventList] = useState<Event[]>([]);
@@ -103,8 +104,10 @@ export default function ResultTabs() {
     setScheduleList(scheduleData);
   };
 
+
   const handleMatchChange = async (matchId: string) => {
     setError(null);
+    setLoading(true);
     setResultData(null);
     setMatchNo(matchId);
 
@@ -120,6 +123,7 @@ export default function ResultTabs() {
     const resultsData = await getMatchData(scheduleIds);
     if (resultsData.data === null) {
       setError("No data found");
+      setLoading(false);
       return;
     }
     setResultData(resultsData.data);
@@ -127,7 +131,14 @@ export default function ResultTabs() {
       teamResults: resultsData.data.teamResults,
       playerResults: [],
     });
+    setLoading(false);
   };
+
+  useEffect(() => {
+    if(matchNo){
+      handleMatchChange(matchNo || "");
+    }
+  }, [afterMatch]);
 
   return (
     <div>
@@ -227,7 +238,7 @@ export default function ResultTabs() {
         </div>
       </div>
       <div className="flex items-center">
-            {resultData && <TournamentResults data={showResultData} />}
+           <TournamentResults data={showResultData} isLoading={loading}/>
         {error && (
           <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-md">
             {error}

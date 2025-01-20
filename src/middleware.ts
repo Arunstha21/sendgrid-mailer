@@ -26,8 +26,11 @@ export async function middleware(request: NextRequest) {
 
     const token = tokenCheck.valid;
     const userRole = tokenCheck.payload?.superUser;
-    
 
+    if(path === '/dashboard' && token){
+        return NextResponse.redirect(new URL('/dashboard/new', request.url));
+    }
+    
     if (path === '/adduser' && !userRole) {
         return NextResponse.redirect(new URL('/dashboard/new', request.url));
     }

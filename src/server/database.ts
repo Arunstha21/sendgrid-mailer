@@ -77,9 +77,7 @@ export async function ImportDataDB(
         entry.players.length < 3 ||
         entry.players.length > 6
       ) {
-        throw new Error(
-          `Team '${entry.team}' must have between 4 and 6 players. Found: ${entry.players.length}`
-        );
+        return {status: "error" ,message: `Team '${entry.team}' must have between 4 and 6 players. Found: ${entry.players.length}`};
       }
 
       for (const player of entry.players) {
@@ -100,20 +98,19 @@ export async function ImportDataDB(
       await event.save();
       await stage.save();
     }
+    return {status: "success", message: "Event Data imported successfully"};
   } else if (type === "schedule") {
     const scheduleData = data as ScheduleData[];
 
     for (const entry of scheduleData) {
       const event = await EventDB.findOne({ name: entry.event });
       if (!event) {
-        throw new Error(`Event '${entry.event}' does not exist.`);
+        return {status: "error", message: `Event '${entry.event}' does not exist.`};
       }
 
       const stage = await StageDB.findOne({ name: entry.stage, event: event._id });
       if (!stage) {
-        throw new Error(
-          `Stage '${entry.stage}' does not exist for event '${entry.event}'.`
-        );
+        return {status: "error", message: `Stage '${entry.stage}' does not exist for event '${event.name}'.`};
       }
 
       const group = await GroupDB.findOne({
@@ -122,9 +119,7 @@ export async function ImportDataDB(
         event: event._id,
       });
       if (!group) {
-        throw new Error(
-          `Group '${entry.group}' does not exist for stage '${stage.name}' and event '${event.name}'.`
-        );
+        return {status: "error", message: `Group '${entry.group}' does not exist for stage '${stage.name}' in event '${event.name}'.`};
       }
 
       const schedule = await ScheduleDB.create({
@@ -142,6 +137,7 @@ export async function ImportDataDB(
 
       console.log(`Inserted schedule data for match number: ${entry.matchNo}`);
     }
+    return {status: "success", message: "Schedule Data imported successfully"};
   }
 }
 
