@@ -21,7 +21,12 @@ import {
 import { MultiEmailInput } from "./MultiEmailInput";
 import { from, getEmailList, sendEmail } from "@/server/sendgrid";
 import EventMessage, { Grouping, IDPass } from "./message";
-import { Group, Schedule, getEventData, getGroupData, getScheduleData } from "@/server/database";
+import {
+  GroupAndSchedule,
+  Schedule,
+  getEventData,
+  getGroupAndSchedule,
+} from "@/server/database";
 
 function textDecoder(text: string) {
   return new TextDecoder().decode(new Uint8Array([...text].map(char => char.charCodeAt(0))));
@@ -102,7 +107,7 @@ export default function Event() {
   const [eventData, setEventData] = useState<EventDataE[]>([]);
   const [eventList, setEventList] = useState<Event[]>([]);
   const [stageList, setStageList] = useState<Stage[]>([]);
-  const [groupList, setGroupList] = useState<Group[]>([]);
+  const [groupList, setGroupList] = useState<GroupAndSchedule[]>([]);
   const [scheduleList, setScheduleList] = useState<Schedule[]>([]);
 
   const editableRef = useRef<HTMLDivElement>(null);
@@ -174,8 +179,9 @@ export default function Event() {
       if (stage === "") {
         return;
       }
-      const groupData = await getGroupData(stage);
-      setGroupList(groupData);
+      const groupAndScheduleData = await getGroupAndSchedule(stage);
+      const { groups } = groupAndScheduleData;
+      setGroupList(groups);
     }
     fetchGroupData();
   }, [stage]);
@@ -339,7 +345,7 @@ export default function Event() {
 
   const handleGroupChange = async (groupId: string) => {
     setGroup(groupId);
-    const scheduleData = await getScheduleData(groupId);
+    const scheduleData = groupList.find((g) => g.id === groupId)?.schedule || [];
     const matches = scheduleData.map((schedule) => {
       return {
         map: schedule.map,

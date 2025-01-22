@@ -9,11 +9,10 @@ import {
 import { useEffect, useState } from "react";
 import { Event, EventDataE, Stage } from "../event";
 import {
-  Group,
+  GroupAndSchedule,
   Schedule,
   getEventData,
-  getGroupData,
-  getScheduleData,
+  getGroupAndSchedule,
 } from "@/server/database";
 import {
   PlayerResult,
@@ -34,7 +33,7 @@ export default function ResultTabs() {
   const [eventData, setEventData] = useState<EventDataE[]>([]);
   const [eventList, setEventList] = useState<Event[]>([]);
   const [stageList, setStageList] = useState<Stage[]>([]);
-  const [groupList, setGroupList] = useState<Group[]>([]);
+  const [groupList, setGroupList] = useState<GroupAndSchedule[]>([]);
   const [scheduleList, setScheduleList] = useState<Schedule[]>([]);
   const [resultData, setResultData] = useState<{
     teamResults: TeamResult[];
@@ -50,7 +49,7 @@ export default function ResultTabs() {
   useEffect(() => {
     async function fetchEventList() {
       const eventData = await getEventData();
-      if (!eventData.length) {
+      if (!eventData || !eventData.length) {
         return;
       }
       setEventData(eventData);
@@ -92,16 +91,30 @@ export default function ResultTabs() {
       if (stage === "") {
         return;
       }
-      const groupData = await getGroupData(stage);
-      setGroupList(groupData);
+      const groupAndScheduleData = await getGroupAndSchedule(stage);
+      const { groups, isMultiGroup } = groupAndScheduleData;
+      if (isMultiGroup) {
+       groups.push({
+          id: "all",
+          name: "All",
+          data: groups.flatMap((g) => g.data),
+          schedule: groups.flatMap((g) => g.schedule).sort((a,b)=> a.matchNo - b.matchNo),
+       })
+        setGroupList(groups);
+      }else{
+        setGroupList(groups);
+      }
     }
     fetchGroupData();
   }, [stage]);
 
   const handleGroupChange = async (groupId: string) => {
     setGroup(groupId);
-    const scheduleData = await getScheduleData(groupId);
-    setScheduleList(scheduleData);
+    const group = groupList.find((g) => g.id === groupId);
+    if (!group) {
+      return;
+    }
+    setScheduleList(group.schedule);
   };
 
 

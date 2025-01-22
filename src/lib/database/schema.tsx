@@ -149,11 +149,11 @@ const scheduleSchema = new Schema({
     required: true,
     ref: "Stage",
   },
-  group: {
+  group: [{
     type: Schema.Types.ObjectId,
     required: true,
     ref: "Group",
-  },
+  }],
   matchNo: {
     type: Number,
     required: true,

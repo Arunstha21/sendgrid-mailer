@@ -145,7 +145,16 @@ export const updateGameData = async (
     schedule.match = match._id;
     await schedule.save();
     
-    const teams = schedule.group.team;
+    let teams: string[] = [];
+    if (Array.isArray(schedule.group)) {
+      for (const group of schedule.group) {
+        if (group.team) {
+          teams = teams.concat(group.team);
+        }
+      }
+    } else {
+      throw new Error("Expected schedule.group to be an array, but found otherwise.");
+    }
 
     let unregisteredPlayers: string[] = [];
     

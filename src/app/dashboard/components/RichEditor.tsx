@@ -40,7 +40,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange = () 
       },
 
       handlePaste: (view, event) => {
-        if (!event || !view) {
+        if (!view || !event) {
           return false;
         }
         const items = event.clipboardData?.items;
