@@ -122,6 +122,7 @@ export default function ResultTabs() {
     setError(null);
     setLoading(true);
     setResultData(null);
+    setShowResultData({ teamResults: [], playerResults: [] });
     setMatchNo(matchId);
 
     let scheduleIds: string[] = [];
@@ -138,13 +139,14 @@ export default function ResultTabs() {
       setError("No data found");
       setLoading(false);
       return;
+    }else{
+      setResultData(resultsData.data);
+      setShowResultData({
+        teamResults: resultsData.data.teamResults,
+        playerResults: [],
+      });
+      setLoading(false);
     }
-    setResultData(resultsData.data);
-    setShowResultData({
-      teamResults: resultsData.data.teamResults,
-      playerResults: [],
-    });
-    setLoading(false);
   };
 
   useEffect(() => {
