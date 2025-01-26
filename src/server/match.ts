@@ -312,6 +312,7 @@ export interface PlayerResult {
   kill: number;
   damage: number;
   survivalTime: number;
+  avgSurvivalTime: number;
   assists: number;
   heal: number;
   matchesPlayed: number;
@@ -419,6 +420,7 @@ export const getOverallResults = async (
             kill: 0,
             damage: 0,
             survivalTime: 0,
+            avgSurvivalTime: 0,
             assists: 0,
             heal: 0,
             matchesPlayed: 0,
@@ -433,9 +435,12 @@ export const getOverallResults = async (
         playerData.heal += stat.heal;
         playerData.matchesPlayed += 1;
       }
-  
+
+      for (const playerId in playerResultsMap) {
+        playerResultsMap[playerId].avgSurvivalTime = playerResultsMap[playerId].survivalTime / playerResultsMap[playerId].matchesPlayed;
+      }
       const playerResults = Object.values(playerResultsMap);
-  
+      
       // Sort and rank player results
       playerResults.sort((a, b) => {
         if (a.kill !== b.kill) return b.kill - a.kill;
@@ -569,6 +574,7 @@ export const getOverallResults = async (
             kill: 0,
             damage: 0,
             survivalTime: 0,
+            avgSurvivalTime: 0,
             assists: 0,
             heal: 0,
             matchesPlayed: 0,
@@ -583,7 +589,9 @@ export const getOverallResults = async (
         playerData.heal += stat.heal;
         playerData.matchesPlayed += 1;
       }
-  
+      for (const playerId in playerResultsMap) {
+        playerResultsMap[playerId].avgSurvivalTime = playerResultsMap[playerId].survivalTime / playerResultsMap[playerId].matchesPlayed;
+      }
       const playerResults = Object.values(playerResultsMap);
   
       // Sort and rank player results

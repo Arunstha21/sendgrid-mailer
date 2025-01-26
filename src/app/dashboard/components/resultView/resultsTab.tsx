@@ -156,8 +156,8 @@ export default function ResultTabs() {
   }, [afterMatch]);
 
   return (
-    <div>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+    <div className="w-full max-w-[1400px] mx-auto">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
         <div className="space-y-2">
           <Label htmlFor="event">Event</Label>
           <Select value={event} onValueChange={setEvent}>
@@ -252,7 +252,7 @@ export default function ResultTabs() {
           </Select>
         </div>
       </div>
-      <div className="flex items-center">
+      <div className="w-full flex items-center">
            <TournamentResults data={showResultData} isLoading={loading}/>
         {error && (
           <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-md">

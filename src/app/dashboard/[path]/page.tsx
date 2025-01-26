@@ -89,22 +89,22 @@ export default function Task() {
       </div>
 
       <Tabs defaultValue={currentPath} onValueChange={handleTabChange} className="w-full">
-        <div className="flex justify-between">
-        <TabsList
-          className={`grid w-full gap-2 ${isMobileMenuOpen ? "grid-cols-2" : "hidden"} sm:grid sm:grid-cols-4`}
-        >
-          {tabItems.map((item) => (
-            <TabsTrigger
-              key={item.value}
-              value={item.value}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="w-full h-full text-sm font-medium"
-            >
-              {item.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        <div className={`flex justify-end ml-4 ${isMobileMenuOpen ? "hidden" : ""}`}>
+        <div className="flex justify-between items-center">
+          <TabsList
+            className={`grid w-full gap-2 ${isMobileMenuOpen ? "grid-cols-2" : "hidden"} sm:grid sm:grid-cols-4`}
+          >
+            {tabItems.map((item) => (
+              <TabsTrigger
+                key={item.value}
+                value={item.value}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="w-full h-full text-sm font-medium"
+              >
+                {item.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <div className="hidden sm:flex justify-end ml-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -129,12 +129,12 @@ export default function Task() {
             </DropdownMenu>
           </div>
         </div>
-        <div className="px-16">
-        {tabItems.map((item) => (
-          <TabsContent key={item.value} value={item.value}>
-            {item.component}
-          </TabsContent>
-        ))}
+        <div className="lg:px-16">
+          {tabItems.map((item) => (
+            <TabsContent key={item.value} value={item.value}>
+              {item.component}
+            </TabsContent>
+          ))}
         </div>
       </Tabs>
     </div>

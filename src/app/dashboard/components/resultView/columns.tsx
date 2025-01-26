@@ -69,14 +69,14 @@ const playerColumns: ColumnDef<PlayerResult>[] = [
     sortingFn: "basic",
   },
   {
-    accessorKey: "survivalTime",
-    header: "Survival Time",
+    accessorKey: "avgSurvivalTime",
+    header: "Avg. Survival",
     sortingFn: "basic",
     cell: ({ row }) => {
-      const seconds = row.original.survivalTime
-      const minutes = Math.floor(seconds / 60)
-      const remainingSeconds = seconds % 60
-      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+      const seconds = row.original.avgSurvivalTime;
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = Math.floor(seconds % 60);
+      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     },
   },
   {
@@ -88,6 +88,11 @@ const playerColumns: ColumnDef<PlayerResult>[] = [
     header: "Healing",
     sortingFn: "basic",
   },
+  {
+    accessorKey: "matchesPlayed",
+    header: "Match Played",
+    sortingFn: "basic",
+  },
 ]
 
 interface TournamentResultsProps {
@@ -96,6 +101,8 @@ interface TournamentResultsProps {
 }
 
 export function TournamentResults({ data, isLoading }: TournamentResultsProps) {
+  console.log(data);
+  
   if (isLoading) {
     return (
       <div className="space-y-8">
