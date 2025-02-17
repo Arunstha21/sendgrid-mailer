@@ -153,7 +153,7 @@ export const updateGameData = async (
         }
       }
     } else {
-      throw new Error("Expected schedule.group to be an array, but found otherwise.");
+      return { status: "error", message: "Invalid group data" };
     }
 
     let unregisteredPlayers: string[] = [];
@@ -288,7 +288,6 @@ export const updateGameData = async (
     return { status: "success", message: "Game data successfully updated!" };
   } catch (error) {
     console.log("Error updating game data:", error);
-    
     return { status: "error", message: "Error updating game data" };
   }
 };
@@ -324,7 +323,7 @@ export interface PlayerResult {
  */
 export const getOverallResults = async (
     matchIds: string[]
-  ): Promise<{ teamResults: TeamResult[]; playerResults: PlayerResult[] }> => {
+  ): Promise<{ status: string; message: string; teamResults: TeamResult[]; playerResults: PlayerResult[] }> => {
     try {
       const objectIds = matchIds.map((id) => id);
       const validMatches = await MatchDB.find({ _id: { $in: objectIds } });
@@ -332,13 +331,13 @@ export const getOverallResults = async (
       .populate("group stage event")
       .lean<ScheduleDoc>();
     if (!scheduleDoc) {
-      throw new Error("Schedule not found for the match");
+      return {status: "error", message: "Schedule not found for the match", teamResults: [], playerResults: []};
     }
       const pointId = scheduleDoc.event.pointSystem;
       const pointSystem = await PointDB.findById(pointId);
 
       if (validMatches.length !== objectIds.length) {
-        throw new Error("Invalid match IDs provided");
+        return {status: "error", message: "Invalid match IDs provided", teamResults: [], playerResults: []};
       }
 
       const validMatchIds = validMatches.map((match) => match._id);
@@ -452,10 +451,10 @@ export const getOverallResults = async (
         item.cRank = index + 1;
       });
   
-      return { teamResults, playerResults };
+      return {status: "success", message: "Successfull", teamResults, playerResults };
     } catch (error) {
       console.log("Error fetching overall results:", error);
-      throw new Error("Error fetching overall results");
+      return {status: "error", message: "Error fetching overall results", teamResults: [], playerResults: []};
     }
   };
   
@@ -485,7 +484,7 @@ export const getOverallResults = async (
 
   export const getPerMatchResults = async (
     matchId: string
-  ): Promise<{ teamResults: TeamResult[]; playerResults: PlayerResult[] }> => {
+  ): Promise<{status: string; message: string; teamResults: TeamResult[]; playerResults: PlayerResult[] }> => {
     try {
       const objectId = matchId;
   
@@ -494,7 +493,7 @@ export const getOverallResults = async (
         .populate("group stage event")
         .lean<ScheduleDoc>();
       if (!scheduleDoc) {
-        throw new Error("Schedule not found for the match");
+        return {status: "error", message: "Schedule not found for the match", teamResults: [], playerResults: []};
       }
 
       const pointId = scheduleDoc.event.pointSystem;
@@ -605,10 +604,10 @@ export const getOverallResults = async (
         item.cRank = index + 1;
       });
   
-      return { teamResults, playerResults };
+      return {status: "success", message: "Successfull", teamResults, playerResults };
     } catch (error) {
       console.log("Error fetching per-match results:", error);
-      throw new Error("Error fetching per-match results");
+      return {status: "error", message: "Error fetching per-match results", teamResults: [], playerResults: []};
     }
   };
   
@@ -618,6 +617,7 @@ export const getOverallResults = async (
   ): Promise<{
     matchExists: boolean;
     data: { teamResults: TeamResult[]; playerResults: PlayerResult[] } | null;
+    message?: string;
   }> => {
     try {
       const schedules = await ScheduleDB.find({ _id: { $in: scheduleIds } });
@@ -626,24 +626,28 @@ export const getOverallResults = async (
         const schedule = schedules[0];
   
         if (!schedule.match) {
-          return { matchExists: false, data: null };
+          return { matchExists: false, data: null, message: "Match data not found" };
         } else {
           const match = await MatchDB.findOne({ _id: schedule.match });
           const data = await getPerMatchResults(match._id);
-  
+          if(data.status === "error"){
+            return { matchExists: false, data: null, message: data.message };
+          }
           return { matchExists: true, data };
         }
       } else if (schedules.length > 1) {
         const matchIds = schedules.map((s: any) => s.match);
         const data = await getOverallResults(matchIds);
-  
+        if(data.status === "error"){
+          return { matchExists: false, data: null, message: data.message };
+        }
         return { matchExists: true, data };
       } else {
-        return { matchExists: false, data: null };
+        return { matchExists: false, data: null, message: "Schedule not found" };
       }
     } catch (error) {
       console.log("Error fetching match data:", error);
-      return { matchExists: false, data: null };
+      return { matchExists: false, data: null, message: "Error fetching match data" };
     }
   };
   

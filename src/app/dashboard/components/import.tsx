@@ -2,7 +2,7 @@
 "use client";
 
 import { EventData, ImportDataDB, ScheduleData } from "@/server/database";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import MatchDataUploader from "./matchUploader";
 
@@ -15,7 +15,7 @@ export default function ImportData() {
   const [importType, setImportType] = useState<"event" | "schedule" | null>(
     null
   );
-
+  
   const handleFileUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
     type: "event" | "schedule"

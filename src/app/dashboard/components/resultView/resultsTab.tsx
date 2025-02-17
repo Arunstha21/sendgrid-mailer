@@ -134,18 +134,24 @@ export default function ResultTabs() {
       scheduleIds = [matchId];
     }
 
-    const resultsData = await getMatchData(scheduleIds);
-    if (resultsData.data === null) {
-      setError("No data found");
+    try {
+      const resultsData = await getMatchData(scheduleIds);
+      if (resultsData.data === null) {
+        setError(resultsData.message || "Error fetching data");
+        setLoading(false);
+        return;
+      }else{
+        setResultData(resultsData.data);
+        setShowResultData({
+          teamResults: resultsData.data.teamResults,
+          playerResults: [],
+        });
+        setLoading(false);
+      }
+    } catch (error) {
+      setError("Error fetching data");
       setLoading(false);
-      return;
-    }else{
-      setResultData(resultsData.data);
-      setShowResultData({
-        teamResults: resultsData.data.teamResults,
-        playerResults: [],
-      });
-      setLoading(false);
+      console.error(error);
     }
   };
 

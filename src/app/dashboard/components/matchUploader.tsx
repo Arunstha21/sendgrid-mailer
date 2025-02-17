@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { Event, EventDataE, Stage } from "./event"
 import {
   GroupAndSchedule,
@@ -128,7 +128,6 @@ export default function MatchDataUploader({setErrorMessage}: {setErrorMessage: (
 
   const handleMatchChange = async (matchId: string) => {
     setResultData(null)
-    setErrorMessage(null)
     setMatchNo(matchId)
     
     const resultsData = await getMatchData([matchId]);

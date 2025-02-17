@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/src/app/dashboard/settings
 
 # next.js
 /.next/
