@@ -1,6 +1,6 @@
 'use client'
 
-import { Dispatch, SetStateAction, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Event, EventDataE, Stage } from "./event"
 import {
   GroupAndSchedule,
