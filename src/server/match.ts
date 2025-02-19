@@ -283,8 +283,10 @@ export const updateGameData = async (
       );
     }
       });
-
+      if(unregisteredPlayers.length > 0){
       console.log("Unregistered players:", unregisteredPlayers);
+      }
+      
     return { status: "success", message: "Game data successfully updated!" };
   } catch (error) {
     console.log("Error updating game data:", error);
@@ -633,7 +635,7 @@ export const getOverallResults = async (
           if(data.status === "error"){
             return { matchExists: false, data: null, message: data.message };
           }
-          return { matchExists: true, data };
+          return { matchExists: true, data, message: "Match data found" };
         }
       } else if (schedules.length > 1) {
         const matchIds = schedules.map((s: any) => s.match);
