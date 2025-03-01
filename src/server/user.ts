@@ -80,7 +80,7 @@ async function login(userName: string, password: string) {
   cookieStore.set("token", token, {
     httpOnly: true,
     path: "/",
-    maxAge: 20 * 60, // 20 minutes in seconds
+    maxAge: 40 * 60, // 40 minutes in seconds
     sameSite: "strict",
   });
 
