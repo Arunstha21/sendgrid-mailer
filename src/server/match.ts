@@ -346,7 +346,7 @@ export const getOverallResults = async (
       
       // Fetch all relevant team stats
       const teamStats = await TeamStatsDB.find({ match: { $in: validMatchIds } })
-        .populate({ path: "team", select: "name group slot", strictPopulate: false })
+        .populate({ path: "team", select: "name group slot dq", strictPopulate: false })
         .lean();
       
       // Fetch all relevant player stats
@@ -368,6 +368,9 @@ export const getOverallResults = async (
   
       for (const stat of teamStats) {        
         const teamId = stat.team._id.toString();
+        if(stat.team.dq === true){
+          continue;
+        }
         if (!teamResultsMap[teamId]) {
           teamResultsMap[teamId] = {
             team: textDecoder(stat.team.name) || "Unknown Team",
@@ -505,7 +508,7 @@ export const getOverallResults = async (
       // Fetch team and player stats for the match
       const [teamStats, playerStats] = await Promise.all([
         TeamStatsDB.find({ match: objectId })
-          .populate({ path: "team", select: "name group slot", strictPopulate: false })
+          .populate({ path: "team", select: "name group slot dq", strictPopulate: false })
           .lean(),
           PlayerStatsDB.find({ match: objectId })
           .populate({
@@ -526,6 +529,9 @@ export const getOverallResults = async (
   
       for (const stat of teamStats) {
         const teamId = stat.team.slot;
+        if(stat.team.dq === true){
+          continue;
+        }
         if (!teamResultsMap[teamId]) {
           teamResultsMap[teamId] = {
             team: textDecoder(stat.team.name) || "Unknown Team",
