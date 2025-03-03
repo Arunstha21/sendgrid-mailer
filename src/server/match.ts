@@ -451,19 +451,17 @@ export const getOverallResults = async (
       }
 
       for (const playerId in playerResultsMap) {
-        for (const playerId in playerResultsMap) {
-          const playerSurvivalTimeRatio = playerResultsMap[playerId].survivalTime / totalSurvivalTime;
-          const playerDamageRatio = playerResultsMap[playerId].damage / totalDamage;
-          const playerKillRatio = playerResultsMap[playerId].kill / totalKills;
-  
-          playerResultsMap[playerId].avgSurvivalTime = playerResultsMap[playerId].survivalTime / playerResultsMap[playerId].matchesPlayed;
-          playerResultsMap[playerId].mvp = parseFloat((
-              (playerSurvivalTimeRatio * 0.4 +
-                playerDamageRatio * 0.4 +
-                playerKillRatio * 0.2) *
-              100
-            ).toFixed(3));
-        }
+        const playerSurvivalTimeRatio = playerResultsMap[playerId].survivalTime / totalSurvivalTime;
+        const playerDamageRatio = playerResultsMap[playerId].damage / totalDamage;
+        const playerKillRatio = playerResultsMap[playerId].kill / totalKills;
+
+        playerResultsMap[playerId].avgSurvivalTime = playerResultsMap[playerId].survivalTime / playerResultsMap[playerId].matchesPlayed;
+        playerResultsMap[playerId].mvp = parseFloat((
+            (playerSurvivalTimeRatio * 0.4 +
+              playerDamageRatio * 0.4 +
+              playerKillRatio * 0.2) *
+            100
+          ).toFixed(3));
       }
       const playerResults = Object.values(playerResultsMap);
       
