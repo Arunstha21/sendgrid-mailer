@@ -93,6 +93,11 @@ const playerColumns: ColumnDef<PlayerResult>[] = [
     header: "Match Played",
     sortingFn: "basic",
   },
+  {
+    accessorKey: "mvp",
+    header: "MVP",
+    sortingFn: "auto",
+  }
 ]
 
 interface TournamentResultsProps {

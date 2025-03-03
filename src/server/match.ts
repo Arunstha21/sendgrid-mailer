@@ -318,6 +318,7 @@ export interface PlayerResult {
   heal: number;
   matchesPlayed: number;
   cRank?: number;
+  mvp: number;
 }
 
 /**
@@ -410,6 +411,10 @@ export const getOverallResults = async (
       teamResults.forEach((item, index) => {
         item.cRank = index + 1;
       });
+
+      let totalSurvivalTime = 0;
+      let totalDamage = 0;
+      let totalKills = 0;
   
       // Aggregate player stats
       const playerResultsMap: Record<string, PlayerResult> = {};
@@ -428,6 +433,7 @@ export const getOverallResults = async (
             assists: 0,
             heal: 0,
             matchesPlayed: 0,
+            mvp: 0,
           };
         }
   
@@ -438,10 +444,26 @@ export const getOverallResults = async (
         playerData.assists += stat.assists;
         playerData.heal += stat.heal;
         playerData.matchesPlayed += 1;
+
+        totalSurvivalTime += stat.survivalTime;
+        totalDamage += stat.damage;
+        totalKills += stat.killNum;
       }
 
       for (const playerId in playerResultsMap) {
-        playerResultsMap[playerId].avgSurvivalTime = playerResultsMap[playerId].survivalTime / playerResultsMap[playerId].matchesPlayed;
+        for (const playerId in playerResultsMap) {
+          const playerSurvivalTimeRatio = playerResultsMap[playerId].survivalTime / totalSurvivalTime;
+          const playerDamageRatio = playerResultsMap[playerId].damage / totalDamage;
+          const playerKillRatio = playerResultsMap[playerId].kill / totalKills;
+  
+          playerResultsMap[playerId].avgSurvivalTime = playerResultsMap[playerId].survivalTime / playerResultsMap[playerId].matchesPlayed;
+          playerResultsMap[playerId].mvp = parseFloat((
+              (playerSurvivalTimeRatio * 0.4 +
+                playerDamageRatio * 0.4 +
+                playerKillRatio * 0.2) *
+              100
+            ).toFixed(3));
+        }
       }
       const playerResults = Object.values(playerResultsMap);
       
@@ -567,6 +589,10 @@ export const getOverallResults = async (
       teamResults.forEach((item, index) => {
         item.cRank = index + 1;
       });
+
+      let totalSurvivalTime = 0;
+      let totalDamage = 0;
+      let totalKills = 0;
   
       // Aggregate player stats
       const playerResultsMap: Record<string, PlayerResult> = {};
@@ -585,6 +611,7 @@ export const getOverallResults = async (
             assists: 0,
             heal: 0,
             matchesPlayed: 0,
+            mvp: 0,
           };
         }
   
@@ -595,14 +622,29 @@ export const getOverallResults = async (
         playerData.assists += stat.assists;
         playerData.heal += stat.heal;
         playerData.matchesPlayed += 1;
+
+        totalSurvivalTime += stat.survivalTime;
+        totalDamage += stat.damage;
+        totalKills += stat.killNum;
       }
       for (const playerId in playerResultsMap) {
+        const playerSurvivalTimeRatio = playerResultsMap[playerId].survivalTime / totalSurvivalTime;
+        const playerDamageRatio = playerResultsMap[playerId].damage / totalDamage;
+        const playerKillRatio = playerResultsMap[playerId].kill / totalKills;
+
         playerResultsMap[playerId].avgSurvivalTime = playerResultsMap[playerId].survivalTime / playerResultsMap[playerId].matchesPlayed;
+        playerResultsMap[playerId].mvp = parseFloat((
+            (playerSurvivalTimeRatio * 0.4 +
+              playerDamageRatio * 0.4 +
+              playerKillRatio * 0.2) *
+            100
+          ).toFixed(3));
       }
       const playerResults = Object.values(playerResultsMap);
   
       // Sort and rank player results
       playerResults.sort((a, b) => {
+        if(a.mvp !== b.mvp) return b.mvp - a.mvp;
         if (a.kill !== b.kill) return b.kill - a.kill;
         if (a.damage !== b.damage) return b.damage - a.damage;
         return b.survivalTime - a.survivalTime;

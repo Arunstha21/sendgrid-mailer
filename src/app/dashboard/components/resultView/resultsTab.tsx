@@ -45,6 +45,9 @@ export default function ResultTabs() {
     playerResults: PlayerResult[];
   }>({ teamResults: [], playerResults: [] });
   const [resultType, setResultType] = useState<"team" | "player">("team");
+  const [teamNames, setTeamNames] = useState<string[]>([]);
+  const [teamName, setTeamName] = useState<string>("all");
+  const [showSelectTeam, setShowSelectTeam] = useState<boolean>(false);
 
   useEffect(() => {
     async function fetchEventList() {
@@ -71,20 +74,38 @@ export default function ResultTabs() {
   useEffect(() => {
     if (resultData) {
       if (resultType === "team") {
+        setShowSelectTeam(false);
         setShowResultData({
           teamResults: resultData.teamResults,
           playerResults: [],
         });
       } else if (resultType === "player") {
+        setShowSelectTeam(true);
+        setTeamNames([...new Set(resultData.playerResults.map((team) => team.teamName))]);
         setShowResultData({
           teamResults: [],
           playerResults: resultData.playerResults,
         });
       } else {
+        setShowSelectTeam(false);
         setShowResultData({ teamResults: [], playerResults: [] });
       }
     }
   }, [resultType, resultData]);
+
+  useEffect(() => {
+    if (teamName === "all") {
+      setShowResultData({
+        teamResults: [],
+        playerResults: resultData?.playerResults || [],
+      });
+    } else {
+      setShowResultData({
+        teamResults: [],
+        playerResults: resultData?.playerResults.filter((p) => p.teamName === teamName) || [],
+      });
+    }
+  }, [teamName]);
 
   useEffect(() => {
     async function fetchGroupData() {
@@ -142,6 +163,7 @@ export default function ResultTabs() {
         return;
       }else{
         setResultData(resultsData.data);
+        setShowSelectTeam(false);
         setShowResultData({
           teamResults: resultsData.data.teamResults,
           playerResults: [],
@@ -257,6 +279,29 @@ export default function ResultTabs() {
             </SelectContent>
           </Select>
         </div>
+        {showSelectTeam && (
+          <div className="space-y-2">
+          <Label htmlFor="type">Team Name</Label>
+          <Select
+            value={teamName}
+            onValueChange={setTeamName}
+          >
+            <SelectTrigger id="teamName">
+              <SelectValue placeholder="Select Team" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem key={"all"} value={"all"}>
+                All
+              </SelectItem>
+              {teamNames.map((team) => (
+                <SelectItem key={team} value={team}>
+                  {team}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        )}
       </div>
       <div className="w-full flex items-center">
            <TournamentResults data={showResultData} isLoading={loading}/>
