@@ -57,7 +57,7 @@ export default function ResultTabs() {
       }
       setEventData(eventData);
 
-      const events = eventData.map((event) => ({
+      const events = eventData.map((event: any) => ({
         id: event.id,
         name: event.name,
       }));

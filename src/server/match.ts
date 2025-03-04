@@ -467,6 +467,7 @@ export const getOverallResults = async (
       
       // Sort and rank player results
       playerResults.sort((a, b) => {
+        if(a.mvp !== b.mvp) return b.mvp - a.mvp;
         if (a.kill !== b.kill) return b.kill - a.kill;
         if (a.damage !== b.damage) return b.damage - a.damage;
         return b.survivalTime - a.survivalTime;

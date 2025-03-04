@@ -1,14 +1,16 @@
 "use server";
 
-import connect from "@/lib/database/connect";
 import {
   EventDB,
   GroupDB,
   PlayerDB,
+  PointDB,
   ScheduleDB,
   StageDB,
   TeamDB,
+  UserDB,
 } from "@/lib/database/schema";
+import { GetProfileData } from "./user";
 
 export type EventData = {
   event: string;
@@ -29,7 +31,6 @@ export type ScheduleData = {
   date: string;
 };
 
-connect();
 
 export async function ImportDataDB(
   data: EventData[] | ScheduleData[],
@@ -208,10 +209,59 @@ export async function ImportDataDB(
     }
 }
 
-export async function getEventData() {
-  const events = await EventDB.find({}).populate("stage");
+export interface Event {
+  id: string;
+  name: string;
+  stages: {id: string; name: string}[];
+  pointSystem: string;
+}
 
-  const data = events.map((event) => {
+export async function getEventById(eventId: string): Promise<Event | null> {
+  const eventData = await getEventData();
+  const eventExists = eventData.find((event: any) => event.id === eventId);
+  if(eventExists){
+    return eventExists;
+  }else{
+    return null;
+  }
+}
+
+export interface PointSystem {
+  id: string;
+  name: string;
+}
+
+export async function getPointSystemList(): Promise<PointSystem[]> {
+  const getPointSystemList = await PointDB.find({});
+  const data = getPointSystemList.map((point: any) => {
+    return {
+      id: point._id.toString(),
+      name: point.name,
+    };
+  }
+  );
+  return data || [];
+}
+
+export async function getEventData() {
+  const user = await GetProfileData();
+  let events
+  if(user.superUser){
+    const userEvents = await EventDB.find({}).populate("stage");
+    events = userEvents;
+  }else{
+    const userEvents = await UserDB.findOne({ userName: user.userName })
+    .populate({
+      path: "events",
+      populate: {
+        path: "stage",
+      }
+    });
+  
+    events = userEvents.events;
+  }
+
+  const data = events.map((event: any) => {
     return {
       id: event._id.toString(),
       name: event.name,
@@ -221,6 +271,7 @@ export async function getEventData() {
           name: stage.name,
         };
       }),
+      pointSystem: event.pointSystem.toString(),
     };
   });
   return data || [];
@@ -229,10 +280,9 @@ export async function getEventData() {
 export type GroupAndSchedule = {
   id: string;
   name: string;
-  data: { slot: number; team: string; email: string }[];
+  data: { id: string, slot: number; team: string; email: string }[];
   schedule: Schedule[];
 };
-
 
 export type Schedule = {
   id: string;
@@ -272,10 +322,11 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
           };
         }
 
-        const teamMap = new Map<string, { slot: number; team: string; email: string }>();
+        const teamMap = new Map<string, { id: string; slot: number; team: string; email: string }>();
         for (const team of group.team) {
           if (!teamMap.has(team.name)) {
             teamMap.set(team.name, {
+              id: team._id.toString(),
               slot: team.slot,
               team: team.name,
               email: team.email,
@@ -307,11 +358,12 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
           };
         }
 
-        const teamMap = new Map<string, { slot: number; team: string; email: string }>();
+        const teamMap = new Map<string, { id: string; slot: number; team: string; email: string }>();
         for (const group of groups) {
           for (const team of group.team) {
             if (!teamMap.has(team.name)) {
               teamMap.set(team.name, {
+                id: team._id.toString(),
                 slot: team.slot,
                 team: team.name,
                 email: team.email,
@@ -339,5 +391,64 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
   } catch (error) {
     console.error("Error fetching group and schedule:", error);
     throw error;
+  }
+}
+
+export async function updateEventData(eventId: string, data: { name: string; pointSystem?: string }) {
+  try {
+    const event = await EventDB.findByIdAndUpdate(eventId, data, { new: true });
+    console.log("Updated event data:", event);
+    return { status: "success", message: "Successfully updated the event data" };
+  } catch (error : any) {
+    console.error("Error updating event data:", error.message);
+    return { status: "error", message: error.message };
+  }
+}
+
+interface GroupAndScheduleUpdateData {
+  stageName: string;
+  group: {
+      id: string;
+      name: string;
+      schedule: Schedule[];
+  };
+  teamData: {id: string; team: string; email: string}[];
+}
+
+export async function updateGroupAndScheduleData(stageId: string, data: GroupAndScheduleUpdateData) {
+  try {
+      await StageDB.findByIdAndUpdate(stageId, { name: data.stageName }, { new: true });
+
+      await GroupDB.findByIdAndUpdate(data.group.id, { name: data.group.name }, { new: true });
+
+      const teams = await TeamDB.find({ group: data.group.id });
+      const teamDataPromises = data.teamData.map(async (team) => {
+          const existingTeam = teams.find((t) => t._id.toString() === team.id);
+          if (existingTeam) {
+              return TeamDB.findByIdAndUpdate(team.id, {
+                  name: team.team,
+                  email: team.email,
+              }, { new: true });
+          }
+      });
+
+      const schedules = await ScheduleDB.find({ group: data.group.id });
+      const scheduleDataPromises = data.group.schedule.map(async (scheduleItem) => {
+          const existingSchedule = schedules.find((s) => s._id.toString() === scheduleItem.id);
+          if (existingSchedule) {
+              return ScheduleDB.findByIdAndUpdate(scheduleItem.id, {
+                  matchNo: scheduleItem.matchNo,
+                  map: scheduleItem.map,
+                  startTime: scheduleItem.startTime,
+                  date: scheduleItem.date,
+              }, { new: true });
+          }
+      });
+
+      await Promise.all([...teamDataPromises, ...scheduleDataPromises]);
+
+      return { status: "success", message: "Group and schedule data updated successfully." };
+  } catch (error: any) {
+      return { status: "error", message: error.message };
   }
 }

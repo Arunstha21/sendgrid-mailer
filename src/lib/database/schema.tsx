@@ -7,6 +7,9 @@ const userSchema = new Schema(
       unique: true,
       required: true,
     },
+    email:{
+      type: String,
+    },
     password: {
       type: String,
       required: true,
@@ -14,6 +17,12 @@ const userSchema = new Schema(
     superUser: {
       type: Boolean,
     },
+    events:[
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Event",
+      }
+    ]
   },
   { timestamps: true }
 );

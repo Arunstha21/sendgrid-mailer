@@ -29,6 +29,7 @@ import { addUser } from "@/server/user";
 
 const addUserSchema = z.object({
   userName: z.string().min(1, "Username is required"),
+  email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters long"),
   superUser: z.boolean().default(false),
 });
@@ -41,6 +42,7 @@ export default function AddUserPage() {
     resolver: zodResolver(addUserSchema),
     defaultValues: {
       userName: "",
+      email: "",
       password: "",
       superUser: false,
     },
@@ -51,7 +53,7 @@ export default function AddUserPage() {
     setSuccess(null);
 
     try {
-      await addUser(data.userName, data.password, data.superUser)
+      await addUser(data.userName,data.email, data.password, data.superUser)
         .then((response) => {
           if (response.status === "success") {
             setSuccess("User created successfully");
@@ -91,6 +93,19 @@ export default function AddUserPage() {
                     <FormLabel>Username</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter username" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter Email" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

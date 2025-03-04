@@ -27,6 +27,7 @@ import {
   getEventData,
   getGroupAndSchedule,
 } from "@/server/database";
+import ScheduleData from "@/components/scheduleData";
 
 function textDecoder(text: string) {
   return new TextDecoder().decode(new Uint8Array([...text].map(char => char.charCodeAt(0))));
@@ -65,7 +66,6 @@ const interpolateTemplate = (
 };
 
 const defaultSelectedSender = { email: "", name: "" };
-const mapList = ["Erangel", "Miramar", "Sanhok"];
 
 export default function Event() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -100,9 +100,7 @@ export default function Event() {
   const [groupings, setGroupings] = useState<{ slot: string; team: string }[]>(
     []
   );
-  const [matches, setMatches] = useState<
-    { map: string; date: string; startTime: string }[]
-  >([]);
+  const [matches, setMatches] = useState<Schedule[]>([]);
 
   const [eventData, setEventData] = useState<EventDataE[]>([]);
   const [eventList, setEventList] = useState<Event[]>([]);
@@ -158,7 +156,7 @@ export default function Event() {
       }
       setEventData(eventData);
 
-      const event = eventData.map((event) => {
+      const event = eventData.map((event: any) => {
         return {
           id: event.id,
           name: event.name,
@@ -348,6 +346,8 @@ export default function Event() {
     const scheduleData = groupList.find((g) => g.id === groupId)?.schedule || [];
     const matches = scheduleData.map((schedule) => {
       return {
+        id: schedule.id,
+        matchNo: schedule.matchNo,
         map: schedule.map,
         date: formatDate(schedule.date),
         startTime: formatTime(schedule.startTime),
@@ -558,72 +558,7 @@ export default function Event() {
               )}
 
               {messageType === "Groupings" && (
-                <div>
-                  <Label>Matches</Label>
-                  {matches.map((match, index) => (
-                    <div key={index} className="flex gap-2 mt-2">
-                      <Select
-                        value={match.map}
-                        onValueChange={(newMap) => {
-                          const newMatches = [...matches];
-                          newMatches[index].map = newMap;
-                          setMatches(newMatches);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Map" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {mapList.map((map) => (
-                            <SelectItem key={map} value={map}>
-                              {map}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      <Input
-                        value={match.date}
-                        onChange={(e) => {
-                          const newMatches = [...matches];
-                          newMatches[index].date = e.target.value;
-                          setMatches(newMatches);
-                        }}
-                        placeholder="Date"
-                      />
-                      <Input
-                        value={match.startTime}
-                        onChange={(e) => {
-                          const newMatches = [...matches];
-                          newMatches[index].startTime = e.target.value;
-                          setMatches(newMatches);
-                        }}
-                        placeholder="Start Time"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={() =>
-                          setMatches(matches.filter((_, i) => i !== index))
-                        }
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    onClick={() =>
-                      setMatches([
-                        ...matches,
-                        { map: "", date: "", startTime: "" },
-                      ])
-                    }
-                    className="mt-2 ml-2"
-                  >
-                    Add Match
-                  </Button>
-                </div>
+                <ScheduleData matches={matches} setMatches={setMatches} isEditing={true} />
               )}
             </div>
           </form>

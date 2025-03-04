@@ -94,7 +94,7 @@ export default function MatchDataUploader({setErrorMessage}: {setErrorMessage: (
       }
       setEventData(eventData)
 
-      const events = eventData.map((event) => ({
+      const events = eventData.map((event:any) => ({
         id: event.id,
         name: event.name,
       }))
