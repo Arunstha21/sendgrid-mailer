@@ -212,6 +212,8 @@ export async function ImportDataDB(
 export interface Event {
   id: string;
   name: string;
+  discordLink: string;
+  organizer: string;
   stages: {id: string; name: string}[];
   pointSystem: string;
 }
@@ -257,7 +259,6 @@ export async function getEventData() {
         path: "stage",
       }
     });
-  
     events = userEvents.events;
   }
 
@@ -265,6 +266,8 @@ export async function getEventData() {
     return {
       id: event._id.toString(),
       name: event.name,
+      discordLink: event.discordLink,
+      organizer: event.organizer,
       stages: event.stage.map((stage: any) => {
         return {
           id: stage._id.toString(),
@@ -394,7 +397,7 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
   }
 }
 
-export async function updateEventData(eventId: string, data: { name: string; pointSystem?: string }) {
+export async function updateEventData(eventId: string, data: { name: string; pointSystem?: string ; discordLink?: string; organizer?: string }) {
   try {
     const event = await EventDB.findByIdAndUpdate(eventId, data, { new: true });
     console.log("Updated event data:", event);

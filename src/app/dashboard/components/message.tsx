@@ -13,6 +13,8 @@ type Matches = {
 
 export type IDPass = {
   event: string
+  discordLink: string
+  organizer: string
   stage: string
   matchNo: number
   map: string
@@ -27,6 +29,8 @@ export type IDPass = {
 
 export type Grouping = {
   event: string
+  discordLink: string
+  organizer: string
   stage: string
   group: string
   groupName: string
@@ -120,10 +124,10 @@ export default function EventMessage({ type, data }: Props) {
         </table>
         <span contentEditable="true" suppressContentEditableWarning>
         <p>Join our discord server if you need any help or have any queries.</p>
-        <p>Link: https://discord.gg/TW894zUW</p>
+        <p>Link: {idPass.discordLink}</p>
         <br/>
         <p>Good luck!</p>
-        <p>Yours truly,<br/>NEPX Esports</p>
+        <p>Yours truly,<br/>{idPass.organizer}</p>
         </span>
       </div>
     )
@@ -161,7 +165,7 @@ export default function EventMessage({ type, data }: Props) {
         </table>
         <span contentEditable="true" suppressContentEditableWarning>
         <p>Join our discord server to view the schedule and more!</p>
-        <p>Link: https://discord.gg/TW894zUW</p>
+        <p>Link: {grouping.discordLink}</p>
         </span>
         <h3>Groupings of {grouping.groupName}:-</h3>
         <table style={tableStyle}>
@@ -185,7 +189,7 @@ export default function EventMessage({ type, data }: Props) {
         <p>Top 6 teams from each group will qualify for the next round.</p>
         <p>Need help, or have questions? Join our discord server and ask for help in the #queries channel.</p>
         <br />
-        <p>Yours truly,<br />NEPX Esports</p>
+        <p>Yours truly,<br />{grouping.organizer}</p>
         </span>
       </div>
     )

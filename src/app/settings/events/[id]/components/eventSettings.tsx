@@ -25,6 +25,8 @@ type Props = {
 
 export default function EventSettingsPage({ eventData }: Props) {
     const [eventName, setEventName] = useState(eventData.name)
+    const [eventDiscordLink, setEventDiscordLink] = useState(eventData.discordLink || "")
+    const [eventOrganizer, setEventOrganizer] = useState(eventData.organizer || "")
     const [pointSystem, setPointSystem] = useState(eventData.pointSystem)
     const [pointSystemList, setPointSystemList] = useState<PointSystem[]>([])
 
@@ -67,7 +69,7 @@ export default function EventSettingsPage({ eventData }: Props) {
     const handleSaveEventSettings = async () => {
         setLoading(true)
         try {
-            const res = await updateEventData(eventData.id, { name: eventName, pointSystem })
+            const res = await updateEventData(eventData.id, { name: eventName, pointSystem, discordLink: eventDiscordLink, organizer: eventOrganizer })
             if (res.status === "success") {
                 setSuccess(res.message)
                 setIsEditing(false)
@@ -132,8 +134,15 @@ export default function EventSettingsPage({ eventData }: Props) {
                     <Select value={pointSystem} onValueChange={setPointSystem} disabled={!isEditing}>
                         <SelectTrigger><SelectValue placeholder="Select point system" /></SelectTrigger>
                         <SelectContent>{pointSystemList.map(ps => <SelectItem key={ps.id} value={ps.id}>{ps.name}</SelectItem>)}</SelectContent>
-                        
                     </Select>
+                    </div>
+                    <div className="space-y-2">
+                    <Label>Event Discord Link</Label>
+                    <Input value={eventDiscordLink} onChange={(e) => setEventDiscordLink(e.target.value)} disabled={!isEditing} />
+                    </div>
+                    <div className="space-y-2">
+                    <Label>Event Organizer</Label>
+                    <Input value={eventOrganizer} onChange={(e) => setEventOrganizer(e.target.value)} disabled={!isEditing} />
                     </div>
                 </div>
                 </CardContent>

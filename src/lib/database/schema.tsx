@@ -39,6 +39,12 @@ const eventSchema = new Schema({
       ref: "Stage",
     },
   ],
+  discordLink:{
+    type: String,
+  },
+  organizer:{
+    type: String,
+  },
   pointSystem: {
     type: Schema.Types.ObjectId,
     ref: "Point",

@@ -46,6 +46,8 @@ export type Stage = {
 export type EventDataE = {
   id: string;
   name: string;
+  discordLink: string;
+  organizer: string;
   stages: Stage[];
 };
 
@@ -151,6 +153,7 @@ export default function Event() {
       const list = await getEmailList();
       setEmailList(list);
       const eventData = await getEventData();
+      console.log(eventData);
       if (!eventData.length) {
         return;
       }
@@ -225,15 +228,20 @@ export default function Event() {
   useEffect(() => {
     const eventDetails = {
       event: eventList.find((e) => e.id === event)?.name,
+      discordLink: eventData.find((e) => e.id === event)?.discordLink,
+      organizer: eventData.find((e) => e.id === event)?.organizer,
       stage: stageList.find((s) => s.id === stage)?.name,
       matchNo: scheduleList.find((s) => s.id === matchNo)?.matchNo,
       groupName: groupList.find((g) => g.id === group)?.name,
     }
-
+    console.log(eventDetails);
+    
     if (messageType === "ID Pass") {
       setSubject(interpolateTemplate(subjectTemplate.idPass, {event: eventDetails.event, stage: eventDetails.stage, group: eventDetails.groupName, matchNo: eventDetails.matchNo}));
       setMessageData({
         event: eventDetails.event,
+        discordLink: eventDetails.discordLink,
+        organizer: eventDetails.organizer,
         stage: eventDetails.stage,
         matchNo: eventDetails.matchNo,
         map,
@@ -249,6 +257,8 @@ export default function Event() {
       setSubject(interpolateTemplate(subjectTemplate.groupings, {event: eventDetails.event, stage: eventDetails.stage, group: eventDetails.groupName}));
       setMessageData({
         event: eventDetails.event,
+        discordLink: eventDetails.discordLink,
+        organizer: eventDetails.organizer,
         stage: eventDetails.stage,
         group,
         groupName: eventDetails.groupName,
