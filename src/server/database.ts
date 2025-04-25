@@ -399,7 +399,7 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
 
 export async function updateEventData(eventId: string, data: { name: string; pointSystem?: string ; discordLink?: string; organizer?: string }) {
   try {
-    const event = await EventDB.findByIdAndUpdate(eventId, data, { new: true });
+    await EventDB.findByIdAndUpdate(eventId, data, { new: true });
     return { status: "success", message: "Successfully updated the event data" };
   } catch (error : any) {
     console.error("Error updating event data:", error.message);
