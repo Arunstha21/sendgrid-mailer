@@ -48,7 +48,6 @@ export default function EventMessage({ type, data }: Props) {
     return <p>No data available</p>;
   }
   
-
   const tableStyle = {
     borderCollapse: 'collapse',
     width: '80%',

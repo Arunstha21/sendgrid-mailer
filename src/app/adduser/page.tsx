@@ -26,6 +26,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import * as z from "zod";
 import { addUser } from "@/server/user";
+import { toast } from "sonner";
 
 const addUserSchema = z.object({
   userName: z.string().min(1, "Username is required"),
@@ -35,8 +36,6 @@ const addUserSchema = z.object({
 });
 
 export default function AddUserPage() {
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof addUserSchema>>({
     resolver: zodResolver(addUserSchema),
@@ -49,25 +48,22 @@ export default function AddUserPage() {
   });
 
   async function onSubmit(data: z.infer<typeof addUserSchema>) {
-    setError(null);
-    setSuccess(null);
-
     try {
       await addUser(data.userName,data.email, data.password, data.superUser)
         .then((response) => {
           if (response.status === "success") {
-            setSuccess("User created successfully");
+            toast.success("User created successfully");
           } else {
-            setError("Failed to create user. Please try again.");
+            toast.error("Failed to create user. Please try again.");
           }
         })
         .catch(() => {
-          setError("Failed to create user. Please try again.");
+          toast.error("Failed to create user. Please try again.");
         });
       form.reset();
     } catch (err:any) {
         console.log(err);
-      setError("Failed to create user. Please try again.");
+      toast.error("Failed to create user. Please try again.");
     }
   }
 
@@ -154,18 +150,6 @@ export default function AddUserPage() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter>
-          {error && (
-            <Alert variant="destructive" className="mt-4 w-full">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          {success && (
-            <Alert className="mt-4 w-full">
-              <AlertDescription>{success}</AlertDescription>
-            </Alert>
-          )}
-        </CardFooter>
       </Card>
     </div>
   );

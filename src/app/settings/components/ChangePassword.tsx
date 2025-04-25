@@ -11,6 +11,7 @@ import { useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
 import { changePassword } from "@/server/user"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
 const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.*\d{2,}).*$/;
 
@@ -33,7 +34,6 @@ const addUserSchema = z
 
 export default function ChangePassword({userName} : {userName: string}) {
   const router = useRouter()
-  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof addUserSchema>>({
     resolver: zodResolver(addUserSchema),
@@ -51,19 +51,16 @@ export default function ChangePassword({userName} : {userName: string}) {
   const passwordValid = passwordRegex.test(newPassword) || newPassword === "";
 
   async function onSubmit(data: z.infer<typeof addUserSchema>) {
-    setError(null);
-    console.log(data);
-    
     await changePassword(userName, data.oldPassword, data.newPassword)
       .then((response) => {
         if (response.status === "success") {
           router.push("/settings")
         }else if(response.status === "error"){
-          setError(response.message);
+          toast.error(response.message);
         }
       })
       .catch((error) => {
-        setError(error.message);
+        toast.error(error.message);
       }
     );
   }
@@ -136,7 +133,6 @@ export default function ChangePassword({userName} : {userName: string}) {
           </Button>
         </form>
       </Form>
-      {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
     </section>
   )
 }

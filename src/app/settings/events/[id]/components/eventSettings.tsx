@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Event, getGroupAndSchedule, getPointSystemList, GroupAndSchedule, PointSystem, Schedule, updateEventData, updateGroupAndScheduleData } from "@/server/database"
 import ScheduleData from "@/components/scheduleData"
 import TeamList from "./teamList"
+import { toast } from "sonner"
 
 async function fetchPointSystems(): Promise<PointSystem[]> {
     return await getPointSystemList();
@@ -41,10 +42,7 @@ export default function EventSettingsPage({ eventData }: Props) {
     const [stageName, setStageName] = useState<string>("")
     const [groupName, setGroupName] = useState<string>("")
     const [teamData, setTeamData] = useState<GroupAndSchedule["data"]>([])
-
-    const [error, setError] = useState<string | null>(null)
-    const [success, setSuccess] = useState<string | null>(null)
-    const [loading, setLoading] = useState<boolean>(false)
+    const [disabled, setDisabled] = useState(false)
 
     useEffect(() => {
         fetchPointSystems().then(setPointSystemList)
@@ -67,29 +65,28 @@ export default function EventSettingsPage({ eventData }: Props) {
     }, [groupId, groupAndSchedule])
 
     const handleSaveEventSettings = async () => {
-        setLoading(true)
+        const toastLoadingId = toast.loading("Saving event settings...")
+        setDisabled(true)
         try {
             const res = await updateEventData(eventData.id, { name: eventName, pointSystem, discordLink: eventDiscordLink, organizer: eventOrganizer })
             if (res.status === "success") {
-                setSuccess(res.message)
+                toast.success(res.message)
                 setIsEditing(false)
             } else {
-                setError(res.message)
+                toast.error(res.message)
             }
         } catch (err: any) {
-            setError(err.message)
+            toast.error(err.message)
         }
-        setLoading(false)
+        toast.dismiss(toastLoadingId)
+        setDisabled(false)
     }
 
     const handleSaveGroupSettings = async () => {
         if (!stageId || !groupId) return
-        setLoading(true)
-        setError(null)
-        setSuccess(null)
-
+        const toastLoadingId = toast.loading("Saving group and schedule settings...")
+        setDisabled(true)
         try {
-
             const response = await updateGroupAndScheduleData(stageId, {
                 stageName,
                 group: {
@@ -101,15 +98,16 @@ export default function EventSettingsPage({ eventData }: Props) {
             })
 
             if (response.status === "success") {
-                setSuccess("Group and schedule data updated successfully.")
+                toast.success("Group and schedule data updated successfully.")
                 setIsGroupScheduleEditing(false)
             } else {
-                setError(response.message)
+                toast.error(response.message)
             }
         } catch (err: any) {
-            setError(err.message)
+            toast.error(err.message)
         }
-        setLoading(false)
+        toast.dismiss(toastLoadingId)
+        setDisabled(false)
     }
 
     return (
@@ -119,7 +117,7 @@ export default function EventSettingsPage({ eventData }: Props) {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Event Settings</CardTitle>
-                    <Button disabled={loading} onClick={() => (isEditing ? handleSaveEventSettings() : setIsEditing(true))}>
+                    <Button disabled={disabled} onClick={() => (isEditing ? handleSaveEventSettings() : setIsEditing(true))}>
                         {isEditing ? <><Save className="mr-2 h-4 w-4" />Save</> : "Edit"}
                     </Button>
                 </CardHeader>
@@ -152,7 +150,7 @@ export default function EventSettingsPage({ eventData }: Props) {
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Stage & Group Settings</CardTitle>
                     <Button
-                        disabled={loading || !stageId}
+                        disabled={disabled || !stageId}
                         onClick={() => (isGroupScheduleEditing ? handleSaveGroupSettings() : setIsGroupScheduleEditing(true))}
                     >
                         {isGroupScheduleEditing ? <><Save className="mr-2 h-4 w-4" />Save</> : "Edit"}
@@ -183,9 +181,6 @@ export default function EventSettingsPage({ eventData }: Props) {
 
                     <ScheduleData matches={matches} setMatches={setMatches} disabled={!isGroupScheduleEditing} isEditing={isGroupScheduleEditing} />
                     <TeamList teamData={teamData} setTeamData={setTeamData} isEditing={isGroupScheduleEditing} />
-
-                    {error && <p className="text-red-500">{error}</p>}
-                    {success && <p className="text-green-500">{success}</p>}
                 </CardContent>
             </Card>
         </div>

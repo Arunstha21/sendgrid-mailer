@@ -9,6 +9,7 @@ import RichTextEditor from "./RichEditor";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { from, getEmailList, sendEmail } from "@/server/sendgrid";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 const defaultSelectedSender = { email: "", name: "" };
 
@@ -19,26 +20,17 @@ export default function New() {
   const [message, setMessage] = useState("");
   const [emailList, setEmailList] = useState<from[]>([]);
   const [selectedSender, setSelectedSender] = useState<from>(defaultSelectedSender);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
-
-  useEffect(() => {
-    if (error) {
-      shakeForm();
-    }
-  }, [error]);
 
   function shakeForm() {
     setShake(true);
     setTimeout(() => setShake(false), 500);
   }
 
-
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const toastLoadingId = toast.loading("Sending email...");
     setLoading(true);
     const emailData = {
       from: selectedSender.email,
@@ -50,17 +42,17 @@ export default function New() {
     
     try {
       await sendEmail(emailData);
-      setSuccess("Email sent successfully!");
+      toast.success("Email sent successfully!");
+      toast.dismiss(toastLoadingId);
       setLoading(false);
     } catch (error: any) {
       shakeForm();
-      setError(error.message);
+      toast.error(error.message);
       console.log('Error sending email:', error.message);
+      toast.dismiss(toastLoadingId);
       setLoading(false);
     }
   };
-
-
 
   useEffect(() => {
     async function fetchData() {
@@ -142,16 +134,6 @@ export default function New() {
           </form>
         </CardContent>
       </Card>
-      {error && (
-        <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-md">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="mt-4 p-4 bg-green-100 text-green-700 rounded-md">
-          {success}
-        </div>
-      )}
     </div>
     
   );

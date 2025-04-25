@@ -8,12 +8,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { changeEmail } from "@/server/user"
+import { toast } from "sonner"
 
 export default function UserSettings({ username, email }: { username: string; email: string }) {
   const router = useRouter()
   const [updateEmail, setEmail] = useState(email)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   // const [sendgridApiKey, setSendgridApiKey] = useState("")
   // const [isEditingApiKey, setIsEditingApiKey] = useState(false)
   // const [showApiKey, setShowApiKey] = useState(false)
@@ -23,12 +22,12 @@ export default function UserSettings({ username, email }: { username: string; em
     // Implement update logic here for email and SendGrid API key
     await changeEmail(username, updateEmail).then((response) => {
       if (response.status === "success") {
-        setSuccess(response.message)
+        toast.success(response.message)
       }else if (response.status === "error") {
-        setError(response.message)
+        toast.error(response.message)
       }
     }).catch((err) => {
-      setError(err.message)
+      toast.error(err.message)
     })
 
     // console.log("Updating user settings:", {
@@ -109,8 +108,6 @@ export default function UserSettings({ username, email }: { username: string; em
           </Button>
         </div>
       </form>
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-      {success && <p className="text-green-500 text-sm">{success}</p>}
     </section>
   )
 }

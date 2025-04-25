@@ -5,13 +5,11 @@ import { EventData, ImportDataDB, ScheduleData } from "@/server/database";
 import { useState } from "react";
 import * as XLSX from "xlsx";
 import MatchDataUploader from "./matchUploader";
+import { toast } from "sonner";
 
 export default function ImportData() {
   const [data, setData] = useState<EventData[] | ScheduleData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
-  const [success, setSuccess] = useState<string | null>(null);
   const [importType, setImportType] = useState<"event" | "schedule" | null>(
     null
   );
@@ -22,19 +20,19 @@ export default function ImportData() {
   ): void => {
     const file = event.target.files?.[0];
     if (file) {
-      setIsLoading(true);
+      const toastLoadingId = toast.loading("Parsing file...");
       setImportType(type);
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target?.result;
         if (typeof content === "string") {
           if (file.name.endsWith(".csv")) {
-            parseCSV(content, type);
+            parseCSV(content, type, toastLoadingId);
           } else if (
             file.name.endsWith(".xlsx") ||
             file.name.endsWith(".xls")
           ) {
-            parseExcel(content, type);
+            parseExcel(content, type, toastLoadingId);
           }
         }
       };
@@ -93,7 +91,7 @@ export default function ImportData() {
     return players;
   };
 
-  const parseCSV = (content: string, type: "event" | "schedule"): void => {
+  const parseCSV = (content: string, type: "event" | "schedule", toastLoadingId: string | number): void => {
     try {
       const lines = content.split("\n");
       const headers = lines[0]?.split(",") || [];
@@ -108,8 +106,6 @@ export default function ImportData() {
         );
       });
 
-      
-
       if (parsedData.length > 0 && validateData(parsedData, type)) {
         if (type === "event") {
           setData(
@@ -122,19 +118,19 @@ export default function ImportData() {
           setData(parsedData as ScheduleData[]);
         }
       } else {
-        setError(
+        toast.error(
           `Invalid ${type === "event" ? "Event Data" : "Schedule Data"} format`
         );
       }
     } catch (err: any) {
       console.log(err);
-      setError("Failed to parse CSV file");
+      toast.error("Failed to parse CSV file");
     } finally {
-      setIsLoading(false);
+      toast.dismiss(toastLoadingId);
     }
   };
 
-  const parseExcel = (content: string, type: "event" | "schedule"): void => {
+  const parseExcel = (content: string, type: "event" | "schedule", toastLoadingId: string | number): void => {
     try {
       const workbook = XLSX.read(content, { type: "binary" });
       const sheetName = workbook.SheetNames[0];
@@ -156,38 +152,36 @@ export default function ImportData() {
           setData(parsedData as ScheduleData[]);
         }
       } else {
-        setError(
+        toast.error(
           `Invalid ${type === "event" ? "Event Data" : "Schedule Data"} format`
         );
       }
     } catch (err: any) {
       console.log(err);
-      setError("Failed to parse Excel file");
+      toast.error("Failed to parse Excel file");
     } finally {
-      setIsLoading(false);
+      toast.dismiss(toastLoadingId);
     }
   };
 
   const handleImportToDB = async (): Promise<void> => {
-      setError(null);
-      setSuccess(null);
+      const toastLoadingId = toast.loading("Importing data...");
       setIsImporting(true);
-      setIsLoading(true);
 
       await ImportDataDB(data, importType as "event" | "schedule").then((res) => {
         if (!res) {
-          setError("Failed to import data");
+          toast.error("Failed to import data");
         }else if (res.status === "error") {
-          setError(res.message);
+          toast.error(res.message);
         } else if (res.status === "success") {
           setData([]);
-          setSuccess(res.message);
+          toast.success(res.message);
         }
       }).catch((err) => {
-        setError(err.message);
+        toast.error(err.message);
       }).finally(() => {
+      toast.dismiss(toastLoadingId);
       setIsImporting(false);
-      setIsLoading(false);
     });
   };
 
@@ -203,7 +197,7 @@ export default function ImportData() {
             type="file"
             accept=".csv,.xlsx,.xls"
             onChange={(e) => handleFileUpload(e, "event")}
-            disabled={isLoading || isImporting}
+            disabled={isImporting}
             className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
           />
         </div>
@@ -213,7 +207,7 @@ export default function ImportData() {
             type="file"
             accept=".csv,.xlsx,.xls"
             onChange={(e) => handleFileUpload(e, "schedule")}
-            disabled={isLoading || isImporting}
+            disabled={isImporting}
             className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
           />
         </div>
@@ -230,10 +224,7 @@ export default function ImportData() {
         )}
       </div>
 
-      <MatchDataUploader setErrorMessage={setError}/>
-      {error && <p className="text-red-500">{error}</p>}
-      {success && <p className="text-green-500">{success}</p>}
-      {isLoading && <p>Loading...</p>}
+      <MatchDataUploader />
     </div>
   );
 }

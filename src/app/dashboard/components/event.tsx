@@ -28,6 +28,7 @@ import {
   getGroupAndSchedule,
 } from "@/server/database";
 import ScheduleData from "@/components/scheduleData";
+import { toast } from "sonner";
 
 function textDecoder(text: string) {
   return new TextDecoder().decode(new Uint8Array([...text].map(char => char.charCodeAt(0))));
@@ -79,9 +80,7 @@ export default function Event() {
     defaultSelectedSender
   );
   const [shake, setShake] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"ID Pass" | "Groupings">(
     "ID Pass"
   );
@@ -136,12 +135,6 @@ export default function Event() {
     return '';
   };
 
-  useEffect(() => {
-    if (error) {
-      shakeForm();
-    }
-  }, [error]);
-
   function shakeForm() {
     setShake(true);
     setTimeout(() => setShake(false), 500);
@@ -153,7 +146,6 @@ export default function Event() {
       const list = await getEmailList();
       setEmailList(list);
       const eventData = await getEventData();
-      console.log(eventData);
       if (!eventData.length) {
         return;
       }
@@ -234,7 +226,6 @@ export default function Event() {
       matchNo: scheduleList.find((s) => s.id === matchNo)?.matchNo,
       groupName: groupList.find((g) => g.id === group)?.name,
     }
-    console.log(eventDetails);
     
     if (messageType === "ID Pass") {
       setSubject(interpolateTemplate(subjectTemplate.idPass, {event: eventDetails.event, stage: eventDetails.stage, group: eventDetails.groupName, matchNo: eventDetails.matchNo}));
@@ -284,48 +275,53 @@ export default function Event() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const toastLoadingId = toast.loading("Sending email...");
     setLoading(true);
-    setError(null);
-    setSuccess(null);
 
     if (selectedSender.email === "") {
       shakeForm();
-      setError("Sender is required");
+      toast.error("Sender is required");
+      toast.dismiss(toastLoadingId);
       setLoading(false);
       return;
     }
 
     if (bcc.length === 0) {
       shakeForm();
-      setError("Recipient is required");
+      toast.error("At least one BCC recipient is required");
+      toast.dismiss(toastLoadingId);
       setLoading(false);
       return;
     }
 
     if (messageType=== "ID Pass" && (!matchId || matchId <= 0)) {
       shakeForm();
-      setError("Match ID is invalid");
+      toast.error("Match ID is required");
+      toast.dismiss(toastLoadingId);
       setLoading(false);
       return;
     }
 
     if (messageType=== "ID Pass" && password === "") {
       shakeForm();
-      setError("Password is required");
+      toast.error("Password is required");
+      toast.dismiss(toastLoadingId);
       setLoading(false);
       return;
     }
 
     if (messageType=== "ID Pass" && (!map || !date || !startTime)) {
       shakeForm();
-      setError("Match details are missing");
+      toast.error("Match details are missing");
+      toast.dismiss(toastLoadingId);
       setLoading(false);
       return;
     }
 
     if (!messageData) {
       shakeForm();
-      setError("Message data is missing");
+      toast.error("Message data is missing");
+      toast.dismiss(toastLoadingId);
       setLoading(false);
       return;
     }
@@ -339,14 +335,13 @@ export default function Event() {
       message: emailContent,
     };
     
-    
-
     try {
       await sendEmail(emailData);
-      setSuccess("Email sent successfully!");
+      toast.success("Email sent successfully!");
     } catch (error: any) {
-      setError(error.message || "Failed to send email");
+      toast.error(error.message || "Failed to send email");
     } finally {
+      toast.dismiss(toastLoadingId);
       setLoading(false);
     }
   };
@@ -592,17 +587,6 @@ export default function Event() {
       </div>
         </CardContent>
       </Card>
-
-      {error && (
-        <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-md">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="mt-4 p-4 bg-green-100 text-green-700 rounded-md">
-          {success}
-        </div>
-      )}
     </div>
   );
 }

@@ -21,13 +21,14 @@ import {
 } from "@/server/match";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TournamentResults } from "./columns";
+import { toast } from "sonner";
 
 export default function ResultTabs() {
   const [event, setEvent] = useState<string>("");
   const [stage, setStage] = useState<string>("");
   const [group, setGroup] = useState<string>("");
   const [matchNo, setMatchNo] = useState<string | undefined>(undefined);
-  const [error, setError] = useState<string | null>(null);
+
   const [loading, setLoading] = useState<boolean>(false);
 
   const [eventData, setEventData] = useState<EventDataE[]>([]);
@@ -138,9 +139,7 @@ export default function ResultTabs() {
     setScheduleList(group.schedule);
   };
 
-
   const handleMatchChange = async (matchId: string) => {
-    setError(null);
     setLoading(true);
     setResultData(null);
     setShowResultData({ teamResults: [], playerResults: [] });
@@ -158,7 +157,7 @@ export default function ResultTabs() {
     try {
       const resultsData = await getMatchData(scheduleIds);
       if (resultsData.data === null) {
-        setError(resultsData.message || "Error fetching data");
+        toast.error(resultsData.message || "Error fetching data");
         setLoading(false);
         return;
       }else{
@@ -171,7 +170,7 @@ export default function ResultTabs() {
         setLoading(false);
       }
     } catch (error) {
-      setError("Error fetching data");
+      toast.error("Error fetching data");
       setLoading(false);
       console.error(error);
     }
@@ -305,11 +304,6 @@ export default function ResultTabs() {
       </div>
       <div className="w-full flex items-center">
            <TournamentResults data={showResultData} isLoading={loading}/>
-        {error && (
-          <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-md">
-            {error}
-          </div>
-        )}
       </div>
     </div>
   );

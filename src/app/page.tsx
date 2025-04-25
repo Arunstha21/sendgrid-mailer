@@ -20,6 +20,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 
 import * as z from "zod"
 import { login } from '@/server/user'
+import { toast } from 'sonner'
 
 const loginSchema = z.object({
   userName: z.string().min(1 ,{
@@ -32,10 +33,8 @@ const loginSchema = z.object({
 
 
 export default function LoginPage() {
-  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -46,25 +45,24 @@ export default function LoginPage() {
   })
 
   async function onSubmit(data: z.infer<typeof loginSchema>) {
-    setError(null)
-    setSuccess(false)
+    const toastLoadingId = toast.loading("Logging in ...")
     setLoading(true)
-
     try {
       await login(data.userName, data.password).then((res)=>{
         if(res.status === 'success'){
           router.push('/dashboard/new')
-          setSuccess(true)
+          toast.success("Login successful")
           setLoading(false)
         }else if(res.status === 'error'){
-          setError(res.message)
+          toast.error(res.message)
           setLoading(false)
         }
       })
-      
+      toast.dismiss(toastLoadingId)
     } catch (err:any) {
       console.log(err)
-      setError('Failed to log in. Please check your credentials.')
+      toast.error('Failed to log in. Please check your credentials.')
+      toast.dismiss(toastLoadingId)
       setLoading(false)
     }
   }
@@ -111,21 +109,6 @@ export default function LoginPage() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter>
-          {error && (
-            <Alert variant="destructive" className="mt-4 w-full">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          {
-            success && (
-              <Alert variant="default" className="mt-4 w-full">
-                <AlertDescription>Login successful. Redirecting to dashboard...</AlertDescription>
-              </Alert>
-            )
-          }
-
-        </CardFooter>
       </Card>
     </div>
   )

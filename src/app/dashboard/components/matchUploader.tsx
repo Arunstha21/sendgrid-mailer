@@ -16,8 +16,9 @@ import { Input } from "@/components/ui/input"
 import { Upload, Check } from 'lucide-react'
 import { MatchData, PlayerResult, TeamResult, getMatchData, updateGameData } from "@/server/match"
 import { MatchDataDialog } from "./resultView/match-data-dialogue"
+import { toast } from "sonner";
 
-export default function MatchDataUploader({setErrorMessage}: {setErrorMessage: (message: string | null) => void}) {
+export default function MatchDataUploader() {
   const [event, setEvent] = useState<string>("")
   const [stage, setStage] = useState<string>("")
   const [group, setGroup] = useState<string>("")
@@ -44,12 +45,12 @@ export default function MatchDataUploader({setErrorMessage}: {setErrorMessage: (
             const jsonData: MatchData = JSON.parse(result)
             setMatchData(jsonData)
           } else {
-            setErrorMessage("Error parsing JSON file")
+            toast.error("Error parsing JSON file")
             return;
           }
         } catch (err) {
           console.log("Error parsing JSON file:", (err as Error).message)
-          setErrorMessage(`Error parsing JSON file ${(err as Error).message}`)
+          toast.error(`Error parsing JSON file ${(err as Error).message}`)
           setIsMatchDataUploaded(false)
         }
       }
@@ -61,7 +62,7 @@ export default function MatchDataUploader({setErrorMessage}: {setErrorMessage: (
     if (matchData) {
       sendMatchData(matchData)
     } else {
-      setErrorMessage("No match data found")
+      toast.error("No match data found")
     }
   }
 
@@ -70,13 +71,13 @@ export default function MatchDataUploader({setErrorMessage}: {setErrorMessage: (
         setUploading(true);
         await updateGameData(data, matchNo).then((res) => {
           if(res.status === "error"){
-            setErrorMessage(res.message)
+            toast.error(res.message)
             setIsMatchDataUploaded(false)
           }else if(res.status === "success"){
             setIsMatchDataUploaded(true)
           }
         }).catch((err) => {
-          setErrorMessage(err.message)
+          toast.error(err.message)
           setIsMatchDataUploaded(false)
         }).finally(() => {
         handleMatchChange(matchNo)
