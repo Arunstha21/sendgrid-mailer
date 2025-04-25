@@ -1,7 +1,6 @@
 import { Schema, model, models } from "mongoose";
 
-const userSchema = new Schema(
-  {
+const userSchema = new Schema({
     userName: {
       type: String,
       unique: true,
@@ -17,15 +16,43 @@ const userSchema = new Schema(
     superUser: {
       type: Boolean,
     },
+    isDiscordResult:{
+      type: Boolean,
+      default: false,
+    },
     events:[
       {
         type: Schema.Types.ObjectId,
         ref: "Event",
       }
     ]
-  },
-  { timestamps: true }
+  },{ timestamps: true }
 );
+
+const resultDiscordSchema = new Schema({
+  userId :{
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: "User",
+  },
+  guildId: {
+    type: String,
+    required: true,
+  },
+  channelId: {
+    type: String,
+    required: true,
+  },
+  adminGuildId: {
+    type: String,
+  },
+  adminChannelId: {
+    type: String,
+  },
+  adminOverallChannelId: {
+    type: String,
+  },
+})
 
 const eventSchema = new Schema({
   name: {
@@ -482,5 +509,6 @@ const MatchDB = models?.Match || model("Match", matchSchema);
 const PointDB = models?.Point || model("Point", pointSchema);
 const PlayerStatsDB = models?.PlayerStats || model("PlayerStats", playerStatsSchema);
 const TeamStatsDB = models?.TeamStats || model("TeamStats", teamStatsSchema);
+const ResultDiscordDB = models?.ResultDiscord || model("ResultDiscord", resultDiscordSchema);
 
-export { UserDB, EventDB, StageDB, GroupDB, ScheduleDB, TeamDB, PlayerDB, MatchDB, PointDB, PlayerStatsDB, TeamStatsDB };
+export { UserDB, EventDB, StageDB, GroupDB, ScheduleDB, TeamDB, PlayerDB, MatchDB, PointDB, PlayerStatsDB, TeamStatsDB, ResultDiscordDB };

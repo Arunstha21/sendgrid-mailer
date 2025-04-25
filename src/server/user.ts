@@ -1,7 +1,7 @@
 "use server";
 
 import connect from "@/lib/database/connect";
-import { UserDB } from "@/lib/database/schema";
+import { ResultDiscordDB, UserDB } from "@/lib/database/schema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
@@ -12,6 +12,7 @@ export interface User {
   userName: string;
   email: string;
   superUser: boolean;
+  isDiscordResult: boolean;
 }
 
 connect();
@@ -47,6 +48,7 @@ const GetProfileData = async (): Promise<User> => {
       userName: "",
       email: "",
       superUser: false,
+      isDiscordResult: false,
     };
   }
 };
@@ -74,6 +76,7 @@ async function login(userName: string, password: string) {
     userName: userExists.userName,
     email: userExists.email,
     superUser: userExists.superUser,
+    isDiscordResult: userExists.isDiscordResult || false,
   };
   
   if (!jwtSecret) {
@@ -113,6 +116,7 @@ async function addUser(userName: string, email: string, password: string, superU
       userName: user.userName,
       email: user.email,
       superUser: user.superUser,
+      isDiscordEnabled: user.isDiscordResult || false,
     };
     return { status: "success", message: userData };
   } catch (error: any) {
@@ -149,14 +153,101 @@ async function changeEmail(userName: string, newEmail: string) {
   if (!user) {
     return { status: "error", message: "User not found" };
   }
+
+  user.email = newEmail;
+  const cookieStore = await cookies();
+  updateCookie(cookieStore, newEmail);
+
+  await user.save();
+  return { status: "success", message: "Email changed successfully" };
+}
+
+async function discordFeature(userName: string, enable: boolean){
+try {
+    const user = await UserDB.findOne({userName});
+    if (!user) {
+      return { status: "error", message: "User not found" };
+    }
+    user.isDiscordResult = enable;
+    const cookieStore = await cookies();
+    updateCookie(cookieStore, undefined, enable);
+
+    await user.save();
+    return { status: "success", message: "Discord feature updated successfully" };
+} catch (error: any) {
+    console.log("Error in updating Discord feature:", error.message);
+    return { status: "error", message: error.message };
+  }
+}
+
+async function getDiscordData(userId: string) {
+try {
+    const discordData = await ResultDiscordDB.findOne({ userId });
+    if (!discordData) {
+      return { status: "error", message: "Discord data not found", data: {
+        guildId: "",
+        channelId: "",
+        adminGuildId: "",
+        adminChannelId: "",
+        adminOverallChannelId: "",
+      } };
+    }
+  
+    return {
+      status: "success",
+      message: "Discord data fetched successfully",
+      data: {
+        guildId: discordData.guildId,
+        channelId: discordData.channelId,
+        adminGuildId: discordData.adminGuildId,
+        adminChannelId: discordData.adminChannelId,
+        adminOverallChannelId: discordData.adminOverallChannelId,
+      }
+    };
+} catch (error: any) {
+    console.log("Error in fetching Discord data:", error.message);
+    return { status: "error", message: error.message, data: {
+      guildId: "",
+      channelId: "",
+      adminGuildId: "",
+      adminChannelId: "",
+      adminOverallChannelId: "",
+    } };
+  }
+  
+}
+
+async function setDiscordData(userId: string, guildId: string, channelId: string, adminGuildId: string, adminChannelId: string, adminOverallChannelId: string) {
+try {
+    const discordData = await ResultDiscordDB.findOne({ userId });
+    if (discordData) {
+      discordData.guildId = guildId;
+      discordData.channelId = channelId;
+      discordData.adminGuildId = adminGuildId;
+      discordData.adminChannelId = adminChannelId;
+      discordData.adminOverallChannelId = adminOverallChannelId;
+      await discordData.save();
+    } else {
+      await ResultDiscordDB.create({
+        userId,
+        guildId,
+        channelId,
+        adminGuildId,
+        adminChannelId,
+        adminOverallChannelId,
+      });
+    }
+    return { status: "success", message: "Discord data saved successfully" };
+  } catch (error: any) {
+    console.log("Error in saving Discord data:", error.message);
+    return { status: "error", message: error.message };
+  }
+}
+
+function updateCookie(cookieStore:any, newEmail?:string, isDiscordEnabled?:boolean) {
   if (!jwtSecret) {
     throw new Error("JWT_SECRET is not defined in the environment variables.");
   }
-
-  user.email = newEmail;
-  await user.save();
-
-  const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
 
   if (!token) {
@@ -180,8 +271,9 @@ async function changeEmail(userName: string, newEmail: string) {
   const updatedPayload = {
     id: decodedToken.id,
     userName: decodedToken.userName,
-    email: newEmail,
+    email: newEmail || decodedToken.email,
     superUser: decodedToken.superUser,
+    isDiscordResult: isDiscordEnabled || decodedToken.isDiscordResult,
   };
 
   const newToken = jwt.sign(updatedPayload, jwtSecret, { expiresIn: remainingSeconds });
@@ -193,7 +285,6 @@ async function changeEmail(userName: string, newEmail: string) {
     maxAge: remainingSeconds, // keep it in sync with JWT exp
     sameSite: 'strict',
   });
-  return { status: "success", message: "Email changed successfully" };
 }
 
-export { login, GetProfileData, logout, addUser, changePassword, changeEmail };
+export { login, GetProfileData, logout, addUser, changePassword, changeEmail, discordFeature, getDiscordData, setDiscordData };

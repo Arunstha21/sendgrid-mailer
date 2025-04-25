@@ -1,12 +1,14 @@
-import { GetProfileData } from "@/server/user";
+import { getDiscordData, GetProfileData } from "@/server/user";
 import EventSettings from "./components/EventSettings";
 import UserSettings from "./components/UserSettings";
 import { getEventData } from "@/server/database";
 import ProfileDropDown from "@/components/profileDropDown";
+import FeatureSettings from "./components/FeatureSettings";
 
 export default async function SettingsPage() {
   const profileData = await GetProfileData();
   const events = await getEventData();
+  const discordChannelData = await getDiscordData(profileData.id);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -19,6 +21,7 @@ export default async function SettingsPage() {
       <div className="space-y-8">
         <UserSettings username={profileData.userName} email={profileData.email}/>
         <EventSettings  events={events}/>
+        <FeatureSettings profile={profileData} discordData={discordChannelData.data}/>
       </div>
     </div>
   )
