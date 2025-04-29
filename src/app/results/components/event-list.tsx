@@ -49,7 +49,6 @@ export default function EventList({ eventsData }: { eventsData: EventData[] }) {
               eventName={selectedEvent?.name || ""}
               stageName={selectedData.stage?.name || ""}
               groupName={selectedData.group?.name || ""}
-              matchId={selectedData.group?.id || ""}
               data={selectedData.groupAndSchedule as GroupAndSchedule}
             />
           ) : (

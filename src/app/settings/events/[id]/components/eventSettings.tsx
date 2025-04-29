@@ -55,7 +55,7 @@ export default function EventSettingsPage({ eventData }: Props) {
         fetchGroupAndSchedule(stageId).then(setGroupAndSchedule);
         const stage = eventData.stages.find(stage => stage.id === stageId)
         if (stage) setStageName(stage.name)
-    }, [stageId])
+    }, [stageId, eventData])
 
     useEffect(() => {
         const group = groupAndSchedule.find(group => group.id === groupId)

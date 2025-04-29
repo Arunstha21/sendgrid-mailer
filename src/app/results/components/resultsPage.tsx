@@ -7,7 +7,7 @@ import MatchSelector from "./match-selector";
 import { useEffect, useState } from "react";
 import { TournamentResults } from "@/app/dashboard/components/resultView/columns";
 
-export default function ResultsPage({eventName, stageName, groupName, matchId, data}: { eventName: string; stageName: string; groupName: string; matchId: string; data: GroupAndSchedule }) {
+export default function ResultsPage({eventName, stageName, groupName, data}: { eventName: string; stageName: string; groupName: string; data: GroupAndSchedule }) {
   return (
     <div className="flex h-screen flex-col">
         <main className="flex-1 p-4">

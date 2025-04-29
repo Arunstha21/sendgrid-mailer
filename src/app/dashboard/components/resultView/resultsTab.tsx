@@ -106,7 +106,7 @@ export default function ResultTabs() {
         playerResults: resultData?.playerResults.filter((p) => p.teamName === teamName) || [],
       });
     }
-  }, [teamName]);
+  }, [teamName, resultData]);
 
   useEffect(() => {
     async function fetchGroupData() {
@@ -143,7 +143,6 @@ export default function ResultTabs() {
     setLoading(true);
     setResultData(null);
     setShowResultData({ teamResults: [], playerResults: [] });
-    setMatchNo(matchId);
 
     let scheduleIds: string[] = [];
     if (afterMatch) {
@@ -180,7 +179,7 @@ export default function ResultTabs() {
     if(matchNo){
       handleMatchChange(matchNo || "");
     }
-  }, [afterMatch]);
+  }, [afterMatch, matchNo]);
 
   return (
     <div className="w-full max-w-[1400px] mx-auto">
@@ -232,7 +231,7 @@ export default function ResultTabs() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="matchNo">Match Number</Label>
-          <Select value={matchNo} onValueChange={handleMatchChange}>
+          <Select value={matchNo} onValueChange={setMatchNo}>
             <SelectTrigger id="matchNo">
               <SelectValue placeholder="Select Match Number" />
             </SelectTrigger>

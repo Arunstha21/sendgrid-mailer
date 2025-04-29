@@ -163,9 +163,11 @@ export default function Event() {
   }, []);
 
   useEffect(() => {
+    if(event != ""){
     const stages = eventData.find((e) => e.id === event)?.stages || [];
     setStageList(stages);
-  }, [event]);
+    }
+  }, [event, eventData]);
 
   useEffect(() => {
     async function fetchGroupData() {
@@ -201,20 +203,17 @@ export default function Event() {
 
 
   useEffect(()=>{
+    if(!matchNo) return
     const match = scheduleList.find((s) => s.id === matchNo);
     if (match) {
-
       const formattedDate = formatDate(match.date);
-
       const formattedTime = formatTime(match.startTime);
   
       setStartTime(formattedTime || "");
       setDate(formattedDate || "");
       setMap(match.map || "");
     }
-
-
-  },[matchNo])
+  },[matchNo, scheduleList])
 
 
   useEffect(() => {
