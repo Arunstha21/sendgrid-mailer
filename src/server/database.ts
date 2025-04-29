@@ -214,6 +214,7 @@ export interface Event {
   name: string;
   discordLink: string;
   organizer: string;
+  isPublic: boolean;
   stages: {id: string; name: string}[];
   pointSystem: string;
 }
@@ -268,6 +269,7 @@ export async function getEventData() {
       name: event.name,
       discordLink: event.discordLink,
       organizer: event.organizer,
+      isPublic: event.isPublic,
       stages: event.stage.map((stage: any) => {
         return {
           id: stage._id.toString(),
@@ -397,7 +399,7 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
   }
 }
 
-export async function updateEventData(eventId: string, data: { name: string; pointSystem?: string ; discordLink?: string; organizer?: string }) {
+export async function updateEventData(eventId: string, data: { name: string; pointSystem?: string ; discordLink?: string; organizer?: string; isPublic?: boolean }) {
   try {
     await EventDB.findByIdAndUpdate(eventId, data, { new: true });
     return { status: "success", message: "Successfully updated the event data" };

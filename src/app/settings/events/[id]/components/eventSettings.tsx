@@ -11,6 +11,7 @@ import { Event, getGroupAndSchedule, getPointSystemList, GroupAndSchedule, Point
 import ScheduleData from "@/components/scheduleData"
 import TeamList from "./teamList"
 import { toast } from "sonner"
+import { Checkbox } from "@/components/ui/checkbox"
 
 async function fetchPointSystems(): Promise<PointSystem[]> {
     return await getPointSystemList();
@@ -29,6 +30,7 @@ export default function EventSettingsPage({ eventData }: Props) {
     const [eventDiscordLink, setEventDiscordLink] = useState(eventData.discordLink || "")
     const [eventOrganizer, setEventOrganizer] = useState(eventData.organizer || "")
     const [pointSystem, setPointSystem] = useState(eventData.pointSystem)
+    const [eventResultPublic, setEventResultPublic] = useState(eventData.isPublic || false)
     const [pointSystemList, setPointSystemList] = useState<PointSystem[]>([])
 
     const [isEditing, setIsEditing] = useState(false)
@@ -68,7 +70,7 @@ export default function EventSettingsPage({ eventData }: Props) {
         const toastLoadingId = toast.loading("Saving event settings...")
         setDisabled(true)
         try {
-            const res = await updateEventData(eventData.id, { name: eventName, pointSystem, discordLink: eventDiscordLink, organizer: eventOrganizer })
+            const res = await updateEventData(eventData.id, { name: eventName, pointSystem, discordLink: eventDiscordLink, organizer: eventOrganizer, isPublic: eventResultPublic })
             if (res.status === "success") {
                 toast.success(res.message)
                 setIsEditing(false)
@@ -113,7 +115,6 @@ export default function EventSettingsPage({ eventData }: Props) {
     return (
         <div className="container mx-auto py-8 px-4">
             <h1 className="text-3xl font-bold mb-6">Event Configuration</h1>
-
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Event Settings</CardTitle>
@@ -142,6 +143,10 @@ export default function EventSettingsPage({ eventData }: Props) {
                     <Label>Event Organizer</Label>
                     <Input value={eventOrganizer} onChange={(e) => setEventOrganizer(e.target.value)} disabled={!isEditing} />
                     </div>
+                    <div className="space-y-2">
+                        <Checkbox checked={eventResultPublic} onCheckedChange={(checked) => setEventResultPublic(checked === true)} disabled={!isEditing}/>
+                        <Label>Event Result Public</Label>
+                    </div>
                 </div>
                 </CardContent>
             </Card>
@@ -150,7 +155,7 @@ export default function EventSettingsPage({ eventData }: Props) {
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Stage & Group Settings</CardTitle>
                     <Button
-                        disabled={disabled || !stageId}
+                        disabled={disabled}
                         onClick={() => (isGroupScheduleEditing ? handleSaveGroupSettings() : setIsGroupScheduleEditing(true))}
                     >
                         {isGroupScheduleEditing ? <><Save className="mr-2 h-4 w-4" />Save</> : "Edit"}
@@ -160,7 +165,7 @@ export default function EventSettingsPage({ eventData }: Props) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                     <Label>Stage</Label>
-                    <Select value={stageId} onValueChange={setStageId} disabled={isGroupScheduleEditing}>
+                    <Select value={stageId} onValueChange={setStageId} disabled={!isGroupScheduleEditing}>
                         <SelectTrigger><SelectValue placeholder="Select stage" /></SelectTrigger>
                         <SelectContent>
                             {eventData.stages.map(stage => <SelectItem key={stage.id} value={stage.id}>{stage.name}</SelectItem>)}
@@ -170,7 +175,7 @@ export default function EventSettingsPage({ eventData }: Props) {
                     <div className="space-y-2">
 
                     <Label>Group</Label>
-                    <Select value={groupId} onValueChange={setGroupId} disabled={isGroupScheduleEditing}>
+                    <Select value={groupId} onValueChange={setGroupId} disabled={!isGroupScheduleEditing}>
                         <SelectTrigger><SelectValue placeholder="Select group" /></SelectTrigger>
                         <SelectContent>
                             {groupAndSchedule.map(group => <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>)}

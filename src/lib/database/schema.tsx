@@ -48,6 +48,10 @@ const eventSchema = new Schema({
   pointSystem: {
     type: Schema.Types.ObjectId,
     ref: "Point",
+  },
+  isPublic:{
+    type: Boolean,
+    default: false,
   }
 });
 
