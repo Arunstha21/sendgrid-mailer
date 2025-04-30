@@ -20,11 +20,6 @@ export default function EventList({ eventsData }: { eventsData: EventData[] }) {
     setSelectedData(null)
     setDialogOpen(true)
   }
-
-  useEffect(() => {
-    console.log("Selected Data:", selectedData);
-  }, [selectedData])
-
   return (
     <div className="flex flex-1 h-screen">
       <aside className="w-64 border-r p-4">

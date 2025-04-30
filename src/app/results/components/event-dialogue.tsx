@@ -58,14 +58,16 @@ export default function EventDialog({ open, onOpenChange, event, setSelectedData
         <DialogHeader>
           <DialogTitle>{event?.name}</DialogTitle>
           <DialogDescription asChild>
-          {step === 1 ? "Select a stage" : 
+          {step === 1 ? (
+          <p>Select a stage</p>
+            ) : (
             <div className="flex items-center">
             <Button variant="ghost" size="sm" onClick={handleBack}>
                 <ArrowLeft className="h-4 w-4" />
                 Back
             </Button>
             Select a group in {selectedStage?.name}
-            </div>}
+            </div>)}
           </DialogDescription>
         </DialogHeader>
         {step === 1 ? (

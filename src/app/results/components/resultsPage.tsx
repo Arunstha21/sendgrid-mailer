@@ -55,7 +55,7 @@ function ResultsContent({matchDetails}: { matchDetails: GroupAndSchedule['schedu
     },[selectedMatch, afterMatch, selectedResultType, matchDetails])
 
     useEffect(()=>{
-        if(selectedTeam === "all") {
+        if(selectedTeam === "All Teams") {
             setResultData((prevData) => {
                 if (prevData) {
                     return {
