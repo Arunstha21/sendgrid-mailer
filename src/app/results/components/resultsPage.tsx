@@ -2,10 +2,11 @@
 import { Checkbox } from "@/components/ui/checkbox"
 import ResultTypeSelector from "./result-type-selector"
 import StageGroupHeader from "./stage-group-header"
-import { GroupAndSchedule, PlayerResult, TeamResult } from "@/server/publicResult";
+import { GroupAndSchedule } from "@/server/publicResult";
 import MatchSelector from "./match-selector";
 import { useEffect, useState } from "react";
 import { TournamentResults } from "@/app/dashboard/components/resultView/columns";
+import { PlayerResult, TeamResult } from "@/server/match";
 
 export default function ResultsPage({eventName, stageName, groupName, data}: { eventName: string; stageName: string; groupName: string; data: GroupAndSchedule }) {
   return (

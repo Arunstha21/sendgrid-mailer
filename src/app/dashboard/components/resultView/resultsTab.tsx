@@ -139,47 +139,47 @@ export default function ResultTabs() {
     setScheduleList(group.schedule);
   };
 
-  const handleMatchChange = async (matchId: string) => {
-    setLoading(true);
-    setResultData(null);
-    setShowResultData({ teamResults: [], playerResults: [] });
-
-    let scheduleIds: string[] = [];
-    if (afterMatch) {
-      // Get all match ids including & before the selected match
-      const index = scheduleList.findIndex((s) => s.id === matchId);
-      scheduleIds = scheduleList.slice(0, index + 1).map((s) => s.id);
-    } else {
-      scheduleIds = [matchId];
-    }
-
-    try {
-      const resultsData = await getMatchData(scheduleIds);
-      if (resultsData.data === null) {
-        toast.error(resultsData.message || "Error fetching data");
-        setLoading(false);
-        return;
-      }else{
+  useEffect(() => {
+    const fetchData = async (matchNo: string) => {
+      setLoading(true);
+      setResultData(null);
+      setShowResultData({ teamResults: [], playerResults: [] });
+  
+      let scheduleIds: string[] = [];
+  
+      if (afterMatch) {
+        const index = scheduleList.findIndex((s) => s.id === matchNo);
+        scheduleIds = scheduleList.slice(0, index + 1).map((s) => s.id);
+      } else {
+        scheduleIds = [matchNo];
+      }
+  
+      try {
+        const resultsData = await getMatchData(scheduleIds);
+        if (resultsData.data === null) {
+          toast.error(resultsData.message || "Error fetching data");
+          return;
+        }
+  
         setResultData(resultsData.data);
         setShowSelectTeam(false);
         setShowResultData({
           teamResults: resultsData.data.teamResults,
           playerResults: [],
         });
+      } catch (error) {
+        toast.error("Error fetching data");
+        console.error(error);
+      } finally {
         setLoading(false);
       }
-    } catch (error) {
-      toast.error("Error fetching data");
-      setLoading(false);
-      console.error(error);
+    };
+  
+    if (matchNo) {
+      fetchData(matchNo);
     }
-  };
-
-  useEffect(() => {
-    if(matchNo){
-      handleMatchChange(matchNo || "");
-    }
-  }, [afterMatch, matchNo]);
+  }, [afterMatch, matchNo, scheduleList]);
+  
 
   return (
     <div className="w-full max-w-[1400px] mx-auto">

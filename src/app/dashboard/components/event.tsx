@@ -217,6 +217,7 @@ export default function Event() {
 
 
   useEffect(() => {
+    if(!eventData || !eventList || !stageList || !groupList || !scheduleList) return
     const eventDetails = {
       event: eventList.find((e) => e.id === event)?.name,
       discordLink: eventData.find((e) => e.id === event)?.discordLink,
@@ -270,6 +271,11 @@ export default function Event() {
     group,
     groupings,
     matches,
+    eventData,
+    eventList,
+    stageList,
+    groupList,
+    scheduleList,
   ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
