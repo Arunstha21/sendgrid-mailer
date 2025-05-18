@@ -15,7 +15,7 @@ export default function MatchSelector({listOfMatches, setSelectedMatch, match, i
       <DropdownMenuContent>
         {listOfMatches.map((matchItem) => (
           <DropdownMenuItem key={matchItem.id} onClick={() => setSelectedMatch(matchItem.id)}>
-            {match === matchItem.id ? <strong>{isAfterMatch} ? {`After Match ${matchItem.matchNo}`}: {`Match ${matchItem.matchNo}`}</strong> : isAfterMatch ? `After Match ${matchItem.matchNo}`: `Match ${matchItem.matchNo}`}
+            {match === matchItem.id ? <strong>{isAfterMatch ? `After Match ${matchItem.matchNo}`: `Match ${matchItem.matchNo}`}</strong> : isAfterMatch ? `After Match ${matchItem.matchNo}`: `Match ${matchItem.matchNo}`}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

@@ -16,8 +16,8 @@ export default function ResultTypeSelector({teams, setResultType, setTeam, resul
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem onClick={() => setResultType("Team Stats")}>Team Stats</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setResultType("Player Stats")}>Player Stats</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setResultType("Team Stats")}>{resultType === "Team Stats" ? <strong>Team Stats</strong>: "Team Stats"}</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setResultType("Player Stats")}>{resultType === "Player Stats" ? <strong>Player Stats</strong>: "Player Stats"}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 

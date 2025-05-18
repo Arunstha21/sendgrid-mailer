@@ -196,4 +196,10 @@ async function changeEmail(userName: string, newEmail: string) {
   return { status: "success", message: "Email changed successfully" };
 }
 
-export { login, GetProfileData, logout, addUser, changePassword, changeEmail };
+async function discordFeature(userName: string, isDiscordEnabled: boolean): Promise<{status:string; message:string}> {
+  console.log(`Discord feature toggled for ${userName}: ${isDiscordEnabled}`);
+  
+  return { status: "success", message: "Discord feature updated (stub)." };
+}
+
+export { login, GetProfileData, logout, addUser, changePassword, changeEmail, discordFeature };

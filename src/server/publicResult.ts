@@ -2,7 +2,8 @@
 import connect from "@/lib/database/connect";
 import { EventDB, ScheduleDB } from "@/lib/database/schema";
 import mongoose, { ObjectId } from "mongoose";
-import { getOverallResults, getPerMatchResults, PlayerResult, TeamResult } from "./match";
+import { getOverallResults as rawGetOverallResults, getPerMatchResults as rawGetPerMatchResults, PlayerResult, TeamResult } from "./match";
+import { cache } from "react";
 
 connect();
 
@@ -11,13 +12,13 @@ export type GroupAndSchedule = {
   name: string;
   schedule: Schedule[];
 };
-  
+
 export type Schedule = {
   id: string;
   matchNo: number;
   matchData: {
-      teamResults: TeamResult[], 
-      playerResults: PlayerResult[]
+    teamResults: TeamResult[];
+    playerResults: PlayerResult[];
   };
   afterMatchData: {
     teamResults: TeamResult[];
@@ -37,7 +38,7 @@ export interface Event {
 export interface Stage {
   _id: ObjectId;
   name: string;
-  event: ObjectId; 
+  event: ObjectId;
   group: ObjectId[];
   __v: number;
 }
@@ -50,287 +51,187 @@ export interface ScheduleDoc {
 }
 
 export interface EventData {
+  id: string;
+  name: string;
+  stages: {
     id: string;
     name: string;
-    stages: {
-        id: string;
-        name: string;
-        groups: {
-            id: string;
-            name: string;
-        }[];
-        }[];
-};
+    groups: {
+      id: string;
+      name: string;
+    }[];
+  }[];
+}
 
-export async function getEventData(): Promise<EventData[]> {
-    const events = await EventDB.find({isPublic: true})
-      .populate({
-        path: "stage",
-        populate: {
-          path: "group",
-        },
-      });
-  
-    const data = events.map((event: any) => {
-      return {
-        id: event._id.toString(),
-        name: event.name,
-        stages: event.stage.map((stage: any) => ({
-          id: stage._id.toString(),
-          name: stage.name,
-          groups: stage.group.map((group: any) => ({
-            id: group._id.toString(),
-            name: group.name,
-          })),
-        })),
-      };
+const getPerMatchResults = cache(rawGetPerMatchResults);
+const getOverallResults = cache(rawGetOverallResults);
+
+export const getEventData = cache(async (): Promise<EventData[]> => {
+  const events = await EventDB.find({ isPublic: true })
+    .populate({
+      path: "stage",
+      populate: {
+        path: "group",
+      },
     });
-    getData();
-    return data as EventData[];
-}  
 
-const groupDataCache = new Map<string, { isMultiGroup: boolean; groups: GroupAndSchedule[] }>();
-const missingGroupIds = new Set<string>();
+  return events.map((event: any) => ({
+    id: event._id.toString(),
+    name: event.name,
+    stages: event.stage.map((stage: any) => ({
+      id: stage._id.toString(),
+      name: stage.name,
+      groups: stage.group.map((group: any) => ({
+        id: group._id.toString(),
+        name: group.name,
+      })),
+    })),
+  })) as EventData[];
+});
 
-export async function getData(): Promise<{ groups: { isMultiGroup: boolean; groups: GroupAndSchedule[] }[] }> {
-  try {
-    const scheduleData = await ScheduleDB.aggregate([
-        // Lookup groups
-        {
-          $lookup: {
-            from: "groups",
-            localField: "group",
-            foreignField: "_id",
-            as: "groups",
-          },
-        },
-        // Lookup event
-        {
-          $lookup: {
-            from: "events",
-            localField: "event",
-            foreignField: "_id",
-            as: "eventData",
-          },
-        },
-        {
-          $unwind: "$eventData"
-        },
-        {
-          $match: {
-            "eventData.isPublic": true,
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            matchNo: 1,
-            map: 1,
-            match: 1,
-            "groups._id": 1,
-            "groups.name": 1,
-          },
-        },
-        {
-          $sort: { matchNo: 1 },
-        },
-      ]).exec();
-      
+export const getData = cache(async (): Promise<{ groups: { isMultiGroup: boolean; groups: GroupAndSchedule[] }[] }> => {
+  const scheduleData = await ScheduleDB.aggregate([
+    { $lookup: { from: "groups", localField: "group", foreignField: "_id", as: "groups" } },
+    { $lookup: { from: "events", localField: "event", foreignField: "_id", as: "eventData" } },
+    { $unwind: "$eventData" },
+    { $match: { "eventData.isPublic": true } },
+    {
+      $project: {
+        _id: 1,
+        matchNo: 1,
+        map: 1,
+        match: 1,
+        "groups._id": 1,
+        "groups.name": 1,
+      },
+    },
+    { $sort: { matchNo: 1 } },
+  ]).exec();
 
-    const teamsByGroupId: Record<string, GroupAndSchedule> = {};
-    const groupMatchMap: Record<string, string[]> = {};
+  const grouped = new Map<string, { id: string; name: string; matchIds: string[]; schedules: any[] }>();
 
-    const checkedMissingGroups = new Set<string>();
+  for (const schedule of scheduleData) {
+    const groupKey = schedule.groups.length === 1
+      ? schedule.groups[0]._id.toString()
+      : schedule.groups.map((g: any) => g._id.toString()).join(";");
 
-    for (const schedule of scheduleData) {
-      const groups = schedule.groups;
+    const groupName = schedule.groups.length === 1
+      ? schedule.groups[0].name
+      : schedule.groups.map((g: any) => g.name).join(" vs ");
 
-      const groupKey = groups.length === 1
-        ? groups[0]._id.toString()
-        : groups.map((g: { _id: object }) => g._id.toString()).join(";");
-        
-      const groupName = groups.length === 1
-        ? groups[0].name
-        : groups.map((g: { name: string }) => g.name).join(" vs ");
-
-      if (!teamsByGroupId[groupKey]) {
-        teamsByGroupId[groupKey] = {
-          id: groupKey,
-          name: groupName,
-          schedule: [],
-        };
-        groupMatchMap[groupKey] = [];
-      }
-
-      if (!schedule.match && !checkedMissingGroups.has(groupKey)) {
-        missingGroupIds.add(groupKey);
-        checkedMissingGroups.add(groupKey);
-      } else if (schedule.match) {
-        groupMatchMap[groupKey].push(schedule.match);
-      }
-    }
-
-    for (const groupKey in groupMatchMap) {
-      if (groupDataCache.has(groupKey)) {
-        continue;
-      }
-
-      try {
-        const matches = groupMatchMap[groupKey];
-
-        const matchPromises = matches.map((matchId) => getPerMatchResults(matchId));
-        const afterMatchPromises = matches.map((_matchId, index) => getOverallResults(matches.slice(0, index + 1)));
-
-        const [matchResults, afterMatchResults] = await Promise.all([
-          Promise.all(matchPromises),
-          Promise.all(afterMatchPromises)
-        ]);
-
-        const groupSchedules = matches.map((matchId, index) => {
-          const schedule = scheduleData.find((s) => s.match && s.match === matchId);
-          if (!schedule) return null;
-          return {
-            id: schedule._id.toString(),
-            matchNo: schedule.matchNo,
-            map: schedule.map,
-            matchData: {
-                teamResults: matchResults[index].teamResults,
-                playerResults: matchResults[index].playerResults
-            },
-            afterMatchData: {
-              teamResults: afterMatchResults[index].teamResults,
-              playerResults: afterMatchResults[index].playerResults,
-            },
-          };
-        }).filter(Boolean);
-
-        const isMultiGroup = teamsByGroupId[groupKey].name.includes(" vs ");
-
-        groupDataCache.set(groupKey, {
-          isMultiGroup,
-          groups: [{
-            id: groupKey,
-            name: teamsByGroupId[groupKey].name,
-            schedule: groupSchedules.filter((schedule): schedule is Schedule => schedule !== null),
-          }]
-        });
-        missingGroupIds.delete(groupKey);
-        
-      } catch (error) {
-        console.error(`Failed to fetch data for group ${groupKey}:`, error);
-        missingGroupIds.add(groupKey);
-      }
-    }
-
-    console.log('Fetching data completed');
-    return {
-      groups: Array.from(groupDataCache.values()),
-    };
-  } catch (error) {
-    console.error("Error fetching group and schedule data:", error);
-    throw error;
-  }
-}
-
-export async function getGroupData(groupId: string): Promise<{ status: "Success" | "Error"; isMultiGroup: boolean; groups: GroupAndSchedule[]; message?: string }> {
-  if (groupDataCache.has(groupId)) {
-    const data = groupDataCache.get(groupId) as { isMultiGroup: boolean; groups: GroupAndSchedule[] };
-    return {status: "Success", ...data};
-  }
-
-  try {
-    const scheduleData = await ScheduleDB.aggregate([
-        { $match: { group: { $in: [new mongoose.Types.ObjectId(groupId)] } } },
-        {
-          $lookup: {
-            from: "groups",
-            localField: "group",
-            foreignField: "_id",
-            as: "groups",
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            matchNo: 1,
-            map: 1,
-            match: 1,
-            groups: {
-              $map: {
-                input: "$groups",
-                as: "g",
-                in: {
-                  _id: "$$g._id",
-                  name: "$$g.name",
-                },
-              },
-            },
-          },
-        },
-        { $sort: { matchNo: 1 } },
-      ]);      
-
-    if (!scheduleData.length) return { status: "Error", message: "Schedule data doesn't exists",isMultiGroup: false, groups: [] };
-    
-    const groupName = scheduleData[0].groups.length === 1
-      ? scheduleData[0].groups.name
-      : scheduleData[0].groups.map((g: { name: string }) => g.name).join(" vs ");
-
-    const isMultiGroup = scheduleData[0].groups.length > 1;
-
-    const matches = scheduleData.filter(s => s.match).map((s) => s.match);
-
-    if (!matches.length) {
-      missingGroupIds.add(groupId);
-      return { status: "Error", message: "Matches data doesn't exists",isMultiGroup: false, groups: [] };
-    }
-
-    const matchPromises = matches.map((matchId) => getPerMatchResults(matchId));
-    const afterMatchPromises = matches.map((_matchId, index) => getOverallResults(matches.slice(0, index + 1)));
-
-    const [matchResults, afterMatchResults] = await Promise.all([
-      Promise.all(matchPromises),
-      Promise.all(afterMatchPromises)
-    ]);
-
-    const groupSchedules = matches.map((matchId, index) => {
-      const schedule = scheduleData.find((s) => s.match && s.match.toString() === matchId.toString());
-      if (!schedule) return null;
-      return {
-        id: schedule._id.toString(),
-        matchNo: schedule.matchNo,
-        map: schedule.map,
-        matchData: {
-            teamResults: matchResults[index].teamResults,
-            playerResults: matchResults[index].playerResults
-        },
-        afterMatchData: {
-          teamResults: afterMatchResults[index].teamResults,
-          playerResults: afterMatchResults[index].playerResults,
-        },
-      };
-    }).filter(Boolean);
-
-    const groupResult = {
-      isMultiGroup,
-      groups: [{
-        id: groupId,
+    if (!grouped.has(groupKey)) {
+      grouped.set(groupKey, {
+        id: groupKey,
         name: groupName,
-        schedule: groupSchedules.filter((schedule): schedule is Schedule => schedule !== null),
-      }]
+        matchIds: [],
+        schedules: [],
+      });
+    }
+
+    if (schedule.match) {
+      grouped.get(groupKey)!.matchIds.push(schedule.match);
+      grouped.get(groupKey)!.schedules.push(schedule);
+    }
+  }
+
+  const result: { isMultiGroup: boolean; groups: GroupAndSchedule[] }[] = [];
+
+  for (const [groupKey, { id, name, matchIds, schedules }] of grouped.entries()) {
+    try {
+      const matchResults = await Promise.all(matchIds.map(getPerMatchResults));
+      const afterMatchResults = await Promise.all(matchIds.map((_, i) => getOverallResults(matchIds.slice(0, i + 1))));
+
+      const scheduleList = matchIds.map((matchId, index) => {
+        const s = schedules.find(s => s.match === matchId);
+        if (!s) return null;
+        return {
+          id: s._id.toString(),
+          matchNo: s.matchNo,
+          map: s.map,
+          matchData: matchResults[index],
+          afterMatchData: afterMatchResults[index],
+        };
+      }).filter(Boolean) as Schedule[];
+
+      result.push({
+        isMultiGroup: name.includes(" vs "),
+        groups: [{ id, name, schedule: scheduleList }],
+      });
+    } catch (e) {
+      console.error(`Failed to process group ${groupKey}`, e);
+    }
+  }
+
+  return { groups: result };
+});
+
+const getGroupDataCached = cache(async (groupId: string): Promise<{ isMultiGroup: boolean; groups: GroupAndSchedule[] }> => {
+  const scheduleData = await ScheduleDB.aggregate([
+    { $match: { group: { $in: [new mongoose.Types.ObjectId(groupId)] } } },
+    { $lookup: { from: "groups", localField: "group", foreignField: "_id", as: "groups" } },
+    {
+      $project: {
+        _id: 1,
+        matchNo: 1,
+        map: 1,
+        match: 1,
+        groups: {
+          $map: {
+            input: "$groups",
+            as: "g",
+            in: { _id: "$$g._id", name: "$$g.name" },
+          },
+        },
+      },
+    },
+    { $sort: { matchNo: 1 } },
+  ]);
+
+  if (!scheduleData.length) throw new Error("No schedule data");
+
+  const groupName = scheduleData[0].groups.length === 1
+    ? scheduleData[0].groups[0].name
+    : scheduleData[0].groups.map((g: any) => g.name).join(" vs ");
+
+  const matches = scheduleData.filter(s => s.match).map(s => s.match);
+
+  if (!matches.length) throw new Error("No matches found");
+
+  const matchResults = await Promise.all(matches.map(getPerMatchResults));
+  const afterMatchResults = await Promise.all(matches.map((_, i) => getOverallResults(matches.slice(0, i + 1))));
+
+  const scheduleList = matches.map((matchId, index) => {
+    const s = scheduleData.find(s => s.match && s.match.toString() === matchId.toString());
+    if (!s) return null;
+    return {
+      id: s._id.toString(),
+      matchNo: s.matchNo,
+      map: s.map,
+      matchData: matchResults[index],
+      afterMatchData: afterMatchResults[index],
     };
+  }).filter(Boolean) as Schedule[];
 
-    groupDataCache.set(groupId, groupResult);
-    missingGroupIds.delete(groupId);
+  return {
+    isMultiGroup: scheduleData[0].groups.length > 1,
+    groups: [{ id: groupId, name: groupName, schedule: scheduleList }],
+  };
+});
 
-    return { status: "Success", ...groupResult };
-  } catch (error) {
-    console.error("Error fetching group data:", error);
-    missingGroupIds.add(groupId);
-    return { status: "Error", message: "Error fetching group data", isMultiGroup: false, groups: [] };
+export async function getGroupData(groupId: string): Promise<
+  { status: "Success"; isMultiGroup: boolean; groups: GroupAndSchedule[] } |
+  { status: "Error"; message: string; isMultiGroup: false; groups: [] }
+> {
+  try {
+    const result = await getGroupDataCached(groupId);
+    return { status: "Success", ...result };
+  } catch (error: any) {
+    console.error("getGroupData error", error);
+    return { status: "Error", message: error.message, isMultiGroup: false, groups: [] };
   }
 }
 
-export async function getMissingGroups(): Promise<string[]> {
-  return Array.from(missingGroupIds);
-}
+export const getMissingGroups = cache(async (): Promise<string[]> => {
+  const allData = await getData();
+  return allData.groups.filter(g => !g.groups.length).map(g => g.groups[0].id);
+});
