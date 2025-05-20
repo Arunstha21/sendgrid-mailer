@@ -285,7 +285,7 @@ export async function getEventData() {
 export type GroupAndSchedule = {
   id: string;
   name: string;
-  data: { id: string, slot: number; team: string; email: string }[];
+  data: { id: string, slot: number; team: string; email: string; playerEmails: string[] | null }[];
   schedule: Schedule[];
 };
 
@@ -301,7 +301,10 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
   try {
     const scheduleData = await ScheduleDB.find({ stage: stageId }).populate({
       path: "group",
-      populate: { path: "team" },
+      populate: { path: "team",
+        populate: {
+        path: "player",
+      } },
     });
 
     const teamsByGroupId: Record<string, GroupAndSchedule> = {};
@@ -327,7 +330,7 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
           };
         }
 
-        const teamMap = new Map<string, { id: string; slot: number; team: string; email: string }>();
+        const teamMap = new Map<string, { id: string; slot: number; team: string; email: string; playerEmails: string[] | null}>();
         for (const team of group.team) {
           if (!teamMap.has(team.name)) {
             teamMap.set(team.name, {
@@ -335,6 +338,17 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
               slot: team.slot,
               team: team.name,
               email: team.email,
+              playerEmails: (() => {
+                    const emails = Array.from(
+                      new Set(
+                        team.player
+                          .map((player: { email: string }) => player.email.trim())
+                          .filter((email: string) => email !== "")
+                      )
+                    ) as string[];
+
+                    return emails.length > 0 ? emails : null;
+                  })()
             });
           }
         }
@@ -363,7 +377,7 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
           };
         }
 
-        const teamMap = new Map<string, { id: string; slot: number; team: string; email: string }>();
+        const teamMap = new Map<string, { id: string; slot: number; team: string; email: string;  playerEmails: string[] | null}>();
         for (const group of groups) {
           for (const team of group.team) {
             if (!teamMap.has(team.name)) {
@@ -372,6 +386,17 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
                 slot: team.slot,
                 team: team.name,
                 email: team.email,
+                playerEmails: (() => {
+                    const emails = Array.from(
+                      new Set(
+                        team.player
+                          .map((player: { email: string }) => player.email.trim())
+                          .filter((email: string) => email !== "")
+                      )
+                    ) as string[];
+
+                    return emails.length > 0 ? emails : null;
+                  })()
               });
             }
           }

@@ -143,8 +143,14 @@ export default function Event() {
 
   useEffect(() => {
     async function fetchEmailList() {
-      const list = await getEmailList();
-      setEmailList(list);
+      try {
+        const list = await getEmailList();
+        setEmailList(list);
+      } catch (error) {
+        console.error("Error fetching email list:", error);
+        toast.error("Failed to fetch email list");
+        
+      }
       const eventData = await getEventData();
       if (!eventData.length) {
         return;
@@ -365,15 +371,20 @@ export default function Event() {
     });
 
     setMatches(matches);
-    
     setScheduleList(scheduleData)
 
-    const selectedGroupEmails =
+    const selectedGroupEmails: string[] = Array.from(new Set(
       groupList
         .find((g) => g.id === groupId)
-        ?.data.map((g) => {
-          return g.email;
-        }) || [];
+        ?.data.flatMap((g) => {
+          const emails: string[] = [];
+          if (typeof g.email === 'string') emails.push(g.email.trim());
+          if (Array.isArray(g.playerEmails)) {
+            emails.push(...g.playerEmails.filter((e) => typeof e === 'string').map(e => e.trim()));
+          }
+          return emails;
+        }) || []
+    ));
 
     const groupings =
       groupList

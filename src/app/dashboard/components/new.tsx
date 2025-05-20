@@ -56,8 +56,14 @@ export default function New() {
 
   useEffect(() => {
     async function fetchData() {
-      const emailList = await getEmailList();
-      setEmailList(emailList);
+      try {
+        const list = await getEmailList();
+        setEmailList(list);
+      } catch (error) {
+        console.error("Error fetching email list:", error);
+        toast.error("Failed to fetch email list");
+        
+      }
     }
 
     fetchData();

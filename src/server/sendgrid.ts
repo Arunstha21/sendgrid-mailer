@@ -37,11 +37,38 @@ async function fetchSenders(): Promise<Sender[]> {
       url: '/v3/senders',
       method: 'GET',
     });
-    response.statusCode = 200;
-    return body as Sender[];
-  } catch (error: any) {
-    console.log('Error fetching sender list:', error.response?.body || error.message);
-    throw new Error('Unable to fetch sender list.');
+
+    if (response.statusCode === 200) {
+      console.log('Sender list from /v3/senders:', body);
+      return body as Sender[];
+    } else {
+      throw new Error(`Primary endpoint failed. Status: ${response.statusCode}`);
+    }
+  } catch (primaryError: any) {
+    console.warn('Primary fetch failed:', primaryError.response?.body || primaryError.message);
+
+    // Try fallback endpoint
+    try {
+      const [fallbackResponse, fallbackBody] = await sgClient.request({
+        url: '/v3/verified_senders',
+        method: 'GET',
+      });
+
+      if (fallbackResponse.statusCode === 200) {
+        const senders = fallbackBody.results.map((s: any) => ({
+            from: {
+              email: s.from_email,
+              name: s.from_name,
+            },
+          }));
+        return senders as Sender[];
+      } else {
+        throw new Error(`Fallback endpoint failed. Status: ${fallbackResponse.statusCode}`);
+      }
+    } catch (fallbackError: any) {
+      console.error('Fallback fetch failed:', fallbackError.response?.body || fallbackError.message);
+      throw new Error('Unable to fetch sender list from both endpoints.');
+    }
   }
 }
 
