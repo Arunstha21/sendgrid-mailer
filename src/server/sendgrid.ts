@@ -46,7 +46,7 @@ async function fetchSenders(): Promise<Sender[]> {
     }
   } catch (primaryError: any) {
     // console.warn('Primary fetch failed:', primaryError.response?.body || primaryError.message);
-
+    console.error('Primary fetch failed:', primaryError.error[0].message);
     // Try fallback endpoint
     try {
       const [fallbackResponse, fallbackBody] = await sgClient.request({
