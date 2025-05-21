@@ -165,8 +165,8 @@ export default function EventMessage({ type, data }: Props) {
         </table>
 
         <span contentEditable="true" suppressContentEditableWarning>
-          <p>Room ID & Password will be sent to the Owner, Player 1, and Manager email addresses 15 minutes before the scheduled match time.
-          <br/>Please ensure your team is ready on time. For any issues, feel free to reach out.</p>
+          <p>Room ID & Password will be sent to the Owner, Player 1, and Manager email addresses 15 minutes before the scheduled match time.</p>
+          <p>Please ensure your team is ready on time. For any issues, feel free to reach out.</p>
           <p><strong>Yours truly,</strong><br />{grouping.organizer}</p>
         </span>
       </div>
