@@ -70,41 +70,18 @@ export default function EventMessage({ type, data }: Props) {
   if (type === "ID Pass") {
     const idPass = data as IDPass
     return (
-      <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+      <div style={{ fontFamily: 'Arial, sans-serif' }}>
         <span contentEditable="true" suppressContentEditableWarning>
-        <p>Hi Team,</p>
-        <p>{idPass.event} of {idPass.stage}</p>
-        <p>Match {idPass.matchNo} for your group is scheduled for {idPass.date} at {idPass.startTime}.</p>
-        <p>{`Please be on time and don't forget to stay in your specific slot.`}</p>
-        <p>Please find the match credentials below:</p>
+          <p>Hi Team,</p>
+          <p>Please find below the details for <strong>Match {idPass.matchNo}</strong> of <strong>{idPass.event}</strong> of {idPass.stage}</p>
         </span>
-        <h3>Match Credentials</h3>
-        <table style={tableStyle}>
-          <tbody>
-            <tr>
-              <td style={headerCellStyle}>Map</td>
-              <td style={cellStyle}>{idPass.map}</td>
-            </tr>
-            <tr>
-              <td style={headerCellStyle}>Match ID</td>
-              <td style={cellStyle}>{idPass.matchId}</td>
-            </tr>
-            <tr>
-              <td style={headerCellStyle}>Password</td>
-              <td style={cellStyle}>{idPass.password}</td>
-            </tr>
-            <tr>
-              <td style={headerCellStyle}>Start Time</td>
-              <td style={cellStyle} contentEditable suppressContentEditableWarning>{idPass.startTime}</td>
-            </tr>
-            <tr>
-              <td style={headerCellStyle}>Date</td>
-              <td style={cellStyle}>{idPass.date}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <h3>Groupings of {idPass.groupName}:-</h3>
+        <span>
+          <p><strong>🕒 Match Start Time: </strong>{idPass.startTime}<br/>
+          <strong>🗺️ Map: </strong>{idPass.map}<br/>
+          <strong>📌 Room ID: </strong>{idPass.matchId}<br/>
+          <strong>🔒 Room Password: </strong>{idPass.password}</p>
+        </span>
+        <h3>Slot List of {idPass.groupName}:-</h3>
         <table style={tableStyle}>
           <thead>
             <tr>
@@ -121,10 +98,14 @@ export default function EventMessage({ type, data }: Props) {
             ))}
           </tbody>
         </table>
-        <span contentEditable="true" suppressContentEditableWarning>
-        <p>Join our discord server if you need any help or have any queries.</p>
-        <p>Link: {idPass.discordLink}</p>
         <br/>
+        <span contentEditable="true" suppressContentEditableWarning>
+        <p>{`Teams must join only the respective slots assigned to them under `}<strong>{idPass.groupName}</strong></p>
+        <p>Join our discord server if you need any help or have any queries.
+        <br/>Link: {idPass.discordLink}</p>
+        <p>⚠️ Kindly ensure that no player with an unregistered in-game name (IGN) participates in the match. Any team found violating this rule will have the unregistered player removed immediately.</p>
+        <p>We appreciate your cooperation and look forward to a smooth match experience.
+        </p>
         <p>Good luck!</p>
         <p>Yours truly,<br/>{idPass.organizer}</p>
         </span>
@@ -135,12 +116,11 @@ export default function EventMessage({ type, data }: Props) {
   if (type === "Groupings") {
     const grouping = data as Grouping
     return (
-      <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+      <div style={{ fontFamily: 'Arial, sans-serif' }}>
         <span contentEditable="true" suppressContentEditableWarning>
         <p>Hi Team,</p>
-        <p>Reminder! for {grouping.event} of {grouping.stage}. Here are the details for your matches.</p>
-
-        <h3>Matches :-</h3>
+        <p>This is a reminder for your upcoming <strong>{grouping.event} - {grouping.stage}</strong> matches. Please find the match details below:</p>
+        <h3>Schedule:-</h3>
         </span>
         <table style={tableStyle}>
           <thead>
@@ -163,8 +143,8 @@ export default function EventMessage({ type, data }: Props) {
           </tbody>
         </table>
         <span contentEditable="true" suppressContentEditableWarning>
-        <p>Join our discord server to view the schedule and more!</p>
-        <p>Link: {grouping.discordLink}</p>
+        <p>Join our discord server to view schedules, updates, and coordinate with the operations team:<br/>
+        Link: {grouping.discordLink}</p>
         </span>
         <h3>Groupings of {grouping.groupName}:-</h3>
         <table style={tableStyle}>
@@ -185,9 +165,7 @@ export default function EventMessage({ type, data }: Props) {
         </table>
 
         <span contentEditable="true" suppressContentEditableWarning>
-        <p>Top 6 teams from each group will qualify for the next round.</p>
-        <p>Need help, or have questions? Join our discord server and ask for help in the #queries channel.</p>
-        <br />
+        <p>Should you have any questions, feel free to reach out to us on Discord in the #queries channel.</p>
         <p>Yours truly,<br />{grouping.organizer}</p>
         </span>
       </div>

@@ -122,7 +122,7 @@ export async function sendEmail(emailData: EmailData): Promise<string> {
     throw new Error('Unable to verify sender email.');
   }
 
-  const toos = Array.from(new Set([...tos, "me@arunshrestha.info.np"])).map(email => ({ email }));
+  const toos = Array.from(new Set([...tos, "rahul.saha@nodwin.com"])).map(email => ({ email }));
 
   const { content, attachments } = extractInlineImages(message);
   
