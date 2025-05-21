@@ -342,7 +342,7 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
                     const emails = Array.from(
                       new Set(
                         team.player
-                          .map((player: { email: string }) => player.email.trim())
+                          .map((player: { email: string }) => player.email.trim().toLowerCase())
                           .filter((email: string) => email !== "")
                       )
                     ) as string[];
@@ -387,16 +387,16 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
                 team: team.name,
                 email: team.email,
                 playerEmails: (() => {
-                    const emails = Array.from(
-                      new Set(
-                        team.player
-                          .map((player: { email: string }) => player.email.trim())
-                          .filter((email: string) => email !== "")
-                      )
-                    ) as string[];
+                      const emails = Array.from(
+                        new Set(
+                          team.player
+                            .map((player: { email: string }) => player.email.trim().toLowerCase())
+                            .filter((email: string) => email !== "")
+                        )
+                      ) as string[];
 
-                    return emails.length > 0 ? emails : null;
-                  })()
+                      return emails.length > 0 ? emails : null;
+                    })()
               });
             }
           }

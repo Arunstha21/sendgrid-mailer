@@ -378,9 +378,13 @@ export default function Event() {
         .find((g) => g.id === groupId)
         ?.data.flatMap((g) => {
           const emails: string[] = [];
-          if (typeof g.email === 'string') emails.push(g.email.trim());
+          if (typeof g.email === 'string') emails.push(g.email.trim().toLowerCase());
           if (Array.isArray(g.playerEmails)) {
-            emails.push(...g.playerEmails.filter((e) => typeof e === 'string').map(e => e.trim()));
+            emails.push(
+              ...g.playerEmails
+                .filter((e) => typeof e === 'string')
+                .map((e) => e.trim().toLowerCase())
+            );
           }
           return emails;
         }) || []

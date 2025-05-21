@@ -45,7 +45,7 @@ async function fetchSenders(): Promise<Sender[]> {
       throw new Error(`Primary endpoint failed. Status: ${response.statusCode}`);
     }
   } catch (primaryError: any) {
-    console.warn('Primary fetch failed:', primaryError.response?.body || primaryError.message);
+    // console.warn('Primary fetch failed:', primaryError.response?.body || primaryError.message);
 
     // Try fallback endpoint
     try {
