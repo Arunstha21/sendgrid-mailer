@@ -107,7 +107,7 @@ export default function EventMessage({ type, data }: Props) {
         <p>We appreciate your cooperation and look forward to a smooth match experience.
         </p>
         <p>Good luck!</p>
-        <p>Yours truly,<br/>{idPass.organizer}</p>
+        <p><strong>Yours truly,</strong><br/>{idPass.organizer}</p>
         </span>
       </div>
     )
@@ -165,8 +165,9 @@ export default function EventMessage({ type, data }: Props) {
         </table>
 
         <span contentEditable="true" suppressContentEditableWarning>
-        <p>Should you have any questions, feel free to reach out to us on Discord in the #queries channel.</p>
-        <p>Yours truly,<br />{grouping.organizer}</p>
+          <p>Room ID & Password will be sent to the Owner, Player 1, and Manager email addresses 15 minutes before the scheduled match time.
+          <br/>Please ensure your team is ready on time. For any issues, feel free to reach out.</p>
+          <p><strong>Yours truly,</strong><br />{grouping.organizer}</p>
         </span>
       </div>
     )
