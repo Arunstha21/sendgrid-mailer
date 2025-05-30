@@ -17,7 +17,7 @@ import { Upload, Check } from 'lucide-react'
 import { MatchData, PlayerResult, TeamResult, getMatchData, updateGameData } from "@/server/match"
 import { MatchDataDialog } from "./resultView/match-data-dialogue"
 import { toast } from "sonner";
-import CheckMatchData from "./checkMatchData";
+import CheckMatchData from "./checkPlayerData";
 
 export default function MatchDataUploader() {
   const [event, setEvent] = useState<string>("")
