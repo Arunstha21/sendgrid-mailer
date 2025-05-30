@@ -10,7 +10,7 @@ import { Menu } from "lucide-react"
 import { GetProfileData, type User } from "@/server/user"
 import ResultTabs from "../components/resultView/resultsTab"
 import ProfileDropDown from "@/components/profileDropDown"
-import { CheckMatchData } from "../components/CheckMatchData"
+import CheckMatchData from "../components/CheckMatchData"
 
 export default function Task() {
   const pathname = usePathname()
