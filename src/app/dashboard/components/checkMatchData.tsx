@@ -10,7 +10,7 @@ import CheckPlayerData from "./checkPlayerData";
 import { MatchData } from "@/server/match";
 
 export default function CheckMatchData(){
-    const [matchData, setMatchData] = useState<MatchData | null>(null);
+  const [matchData, setMatchData] = useState<MatchData | null>(null);
   const [event, setEvent] = useState<string>("");
   const [stage, setStage] = useState<string>("");
   const [group, setGroup] = useState<string>("");
