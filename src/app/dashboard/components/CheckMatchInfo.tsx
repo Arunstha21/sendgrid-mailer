@@ -52,8 +52,6 @@ export default function CheckMatchInfo(){
 
   useEffect(() => {
     const selectedScheduleData = scheduleList.find(s => s.id === matchNo);
-    console.log(selectedScheduleData);
-    
     if (!selectedScheduleData || selectedScheduleData?.match || !isMatchEnded) {
       setShowMatchUpload(false);
     } else if (!selectedScheduleData?.match && isMatchEnded) {
