@@ -295,6 +295,7 @@ export type Schedule = {
   map: string;
   startTime: string;
   date: string;
+  match?: string;
 };
 
 export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGroup: boolean; groups: GroupAndSchedule[] }> {
@@ -362,6 +363,7 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
           map: schedule.map,
           startTime: schedule.startTime,
           date: schedule.date,
+          match: schedule.match ? schedule.match.toString() : null
         });
       } else if (groups.length >= 2) {
         // Multiple groups case: Combine group names and set data

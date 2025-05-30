@@ -401,6 +401,7 @@ export interface TeamResult {
   wwcd: number;
   matchesPlayed: number;
   cRank?: number;
+  rank?: number;
   lastMatchRank?: number;
 }
 
@@ -686,6 +687,7 @@ export const getPerMatchResults = async (
       teamData.damage += stat.damage;
       teamData.wwcd += stat.rank === 1 ? 1 : 0;
       teamData.matchesPlayed += 1;
+      teamData.rank = stat.rank;
 
       teamData.placePoint = pointSystem.pointSystem.find((point: {rank:number; point: number; _id: ObjectId}) => point.rank === stat.rank)?.point || 0;
       teamData.totalPoint = teamData.placePoint + teamData.kill;
@@ -698,6 +700,7 @@ export const getPerMatchResults = async (
       if (a.totalPoint !== b.totalPoint) return b.totalPoint - a.totalPoint;
       if (a.placePoint !== b.placePoint) return b.placePoint - a.placePoint;
       if (a.kill !== b.kill) return b.kill - a.kill;
+      if ((a.rank && b.rank) && b.rank !== a.rank) return a.rank - b.rank;
       return a.team.localeCompare(b.team);
     });
 

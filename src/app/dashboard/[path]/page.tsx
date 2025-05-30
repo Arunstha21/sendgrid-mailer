@@ -56,7 +56,7 @@ export default function Task() {
       <Tabs defaultValue={currentPath} onValueChange={handleTabChange} className="w-full">
         <div className="flex justify-between items-center">
           <TabsList
-            className={`grid w-full gap-2 ${isMobileMenuOpen ? "grid-cols-2" : "hidden"} sm:grid sm:grid-cols-4`}
+            className={`grid w-full gap-1 ${isMobileMenuOpen ? "grid-cols-2" : "hidden"} sm:grid sm:grid-cols-5`}
           >
             {tabItems.map((item) => (
               <TabsTrigger
