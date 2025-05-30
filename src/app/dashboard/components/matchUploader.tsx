@@ -17,6 +17,7 @@ import { Upload, Check } from 'lucide-react'
 import { MatchData, PlayerResult, TeamResult, getMatchData, updateGameData } from "@/server/match"
 import { MatchDataDialog } from "./resultView/match-data-dialogue"
 import { toast } from "sonner";
+import CheckMatchData from "./checkMatchData";
 
 export default function MatchDataUploader() {
   const [event, setEvent] = useState<string>("")
@@ -240,9 +241,12 @@ export default function MatchDataUploader() {
                   {matchData ? matchData.allinfo.TotalPlayerList.length + " players loaded" : "No file chosen"}
                 </span>
               </div>
+              <div className="flex space-x-2">
               <Button onClick={uploadMatchData} disabled={!matchData}>
                 <Upload className="mr-2 h-4 w-4" /> {uploading? "Uploading....." :"Upload Match Data"}
               </Button>
+               <CheckMatchData matchData={matchData} setMatchData={setMatchData} matchNo={matchNo} />
+              </div>
             </div>
           ) : (
             <>

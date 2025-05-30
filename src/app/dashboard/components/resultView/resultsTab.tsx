@@ -95,7 +95,7 @@ export default function ResultTabs() {
   }, [resultType, resultData]);
 
   useEffect(() => {
-    if (teamName === "all") {
+    if (resultType=== "player" && teamName === "all") {
       setShowResultData({
         teamResults: [],
         playerResults: resultData?.playerResults || [],
@@ -106,7 +106,7 @@ export default function ResultTabs() {
         playerResults: resultData?.playerResults.filter((p) => p.teamName === teamName) || [],
       });
     }
-  }, [teamName, resultData]);
+  }, [teamName]);
 
   useEffect(() => {
     async function fetchGroupData() {

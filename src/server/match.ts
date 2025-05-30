@@ -88,10 +88,108 @@ function textDecoder(text: string) {
   return new TextDecoder().decode(new Uint8Array([...text].map(char => char.charCodeAt(0))));
 }
 
+export const checkPlayerData = async (
+  data: MatchData,
+  scheduleId: string
+): Promise<{
+  status: string;
+  message: string;
+  unregisteredPlayersData?: {
+    gameData: { playerName: string; uId: string }[];
+    dbData: { playerName: string; uId: string }[];
+  };
+}> => {
+  try {
+    const { GameID, TotalPlayerList } = data.allinfo;
+
+    const gameExists = await MatchDB.findOne({ gameId: GameID });
+    if (gameExists) {
+      return { status: "error", message: "Game data already exists" };
+    }
+
+    const schedule = await ScheduleDB.findById(scheduleId).populate({
+      path: "group",
+      strictPopulate: false,
+    });
+    if (!schedule) {
+      return { status: "error", message: "Schedule not found" };
+    }
+    
+    let teams: string[] = [];
+
+    if (Array.isArray(schedule.group)) {
+      for (const group of schedule.group) {
+        if (group.team) {
+          teams = teams.concat(group.team);
+        }
+      }
+    } else {
+      return { status: "error", message: "Invalid group data" };
+    }
+
+    const normalizeUid = (uid: any) => uid.toString().trim();
+
+    const allDbPlayers: { uid: string; name: string }[] = [];
+    const allGamePlayers: { uId: string; playerName: string }[] = TotalPlayerList.map((p) => ({
+      uId: normalizeUid(p.uId),
+      playerName: textDecoder(p.playerName),
+    }));
+
+    for (const teamId of teams) {
+      const players = await PlayerDB.find({ team: teamId });
+      for (const player of players) {
+        allDbPlayers.push({
+          uid: normalizeUid(player.uid),
+          name: player.name,
+        });
+      }
+    }
+
+    const dbUidSet = new Set(allDbPlayers.map((p) => p.uid));
+    const gameUidSet = new Set(allGamePlayers.map((p) => p.uId));
+
+    const unMatchedGamePlayerData: { playerName: string; uId: string }[] = [];
+    const seenGameUids = new Set<string>();
+    for (const player of allGamePlayers) {
+      if (!dbUidSet.has(player.uId) && !seenGameUids.has(player.uId)) {
+        unMatchedGamePlayerData.push(player);
+        seenGameUids.add(player.uId);
+      }
+    }
+
+    const unMatchedDBPlayerData: { playerName: string; uId: string }[] = [];
+    const seenDbUids = new Set<string>();
+    for (const player of allDbPlayers) {
+      if (!gameUidSet.has(player.uid) && !seenDbUids.has(player.uid)) {
+        unMatchedDBPlayerData.push({
+          playerName: player.name,
+          uId: player.uid,
+        });
+        seenDbUids.add(player.uid);
+      }
+    }
+
+    const unregisteredPlayersData = {
+      gameData: unMatchedGamePlayerData,
+      dbData: unMatchedDBPlayerData,
+    };
+
+
+    return {
+      status: "success",
+      message: "Game data successfully updated!",
+      unregisteredPlayersData,
+    };
+  } catch (error) {
+    console.log("Error updating game data:", error);
+    return { status: "error", message: "Error updating game data" };
+  }
+};
+
 export const updateGameData = async (
   data: MatchData,
   scheduleId: string
-): Promise<{status: string; message: string}> => {
+): Promise<{status: string; message: string;}> => {
   try {
     const {
       GameID,
@@ -165,8 +263,8 @@ export const updateGameData = async (
       const playerMap = new Map(playerList.map((p) => [p.uid.toString(), p]));
       
       for (const player of TotalPlayerList){
-        
         const playerData = playerMap.get(player.uId.toString());
+        // const playerData = playerMap.get(player.playerName.toString());
         // const playerData = playerList.find((p) =>{p.uid.toString() === player.uId.toString()});
         if (!playerData) {
           unregisteredPlayers = [...unregisteredPlayers, player.uId.toString()];
