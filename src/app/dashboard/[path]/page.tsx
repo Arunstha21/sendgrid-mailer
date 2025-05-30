@@ -10,7 +10,7 @@ import { Menu } from "lucide-react"
 import { GetProfileData, type User } from "@/server/user"
 import ResultTabs from "../components/resultView/resultsTab"
 import ProfileDropDown from "@/components/profileDropDown"
-import CheckMatchData from "../components/CheckMatchData"
+import CheckMatchInfo from "../components/CheckMatchInfo"
 
 export default function Task() {
   const pathname = usePathname()
@@ -37,7 +37,7 @@ export default function Task() {
     { value: "event", label: "Compose for Event", component: <Event /> },
     { value: "import", label: "Import Data", component: <ImportData /> },
     { value: "results", label: "Results", component: <ResultTabs /> },
-    { value: "checkMatchData", label: "Check Match Data", component: <CheckMatchData/> }, 
+    { value: "checkMatchData", label: "Check Match Data", component: <CheckMatchInfo/> }, 
   ]
 
   return (

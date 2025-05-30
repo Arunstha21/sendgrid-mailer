@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import CheckPlayerData from "./checkPlayerData";
 import { MatchData } from "@/server/match";
 
-export default function CheckMatchData(){
+export default function CheckMatchInfo(){
   const [matchData, setMatchData] = useState<MatchData | null>(null);
   const [event, setEvent] = useState<string>("");
   const [stage, setStage] = useState<string>("");
