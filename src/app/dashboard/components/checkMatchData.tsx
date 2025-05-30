@@ -23,7 +23,6 @@ export default function CheckMatchData({matchData, setMatchData, matchNo}: {matc
             toast.error(res.message)
             }
             else if (res.status === "success") {
-                console.log("Player data check successful", res.unregisteredPlayersData);
                 const unregisteredPlayersData = res.unregisteredPlayersData;
                 if(unregisteredPlayersData) {
                     setUnMatchedGameData(unregisteredPlayersData.gameData);
@@ -40,7 +39,7 @@ export default function CheckMatchData({matchData, setMatchData, matchNo}: {matc
             setUploading(false);
         })
         } else {
-            toast.error("No match data found")
+            toast.error("No unmatched player data found")
         }
     }
 
@@ -73,7 +72,6 @@ export default function CheckMatchData({matchData, setMatchData, matchNo}: {matc
                     TotalPlayerList: updatePlayersData,
                 },
             };
-            console.log("Updated Match Data:", updatedMatchData);
             setMatchData(updatedMatchData);
             toast.success("Player data updated successfully");
             setIsOpen(false);
@@ -91,11 +89,9 @@ export default function CheckMatchData({matchData, setMatchData, matchNo}: {matc
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Match Data</DialogTitle>
+          <DialogTitle>Unmatched Player Data</DialogTitle>
         </DialogHeader>
             {unMatchedGameData.length > 0 ? (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Unmatched Game Data</h2>
           <div className="space-y-2">
             {unMatchedGameData.map((player) => (
               <div key={player.uId} className="flex items-center gap-4 p-3 border rounded-lg">
@@ -127,7 +123,6 @@ export default function CheckMatchData({matchData, setMatchData, matchNo}: {matc
               </div>
             ))}
           </div>
-        </div>
       ) : (
         <div className="text-center py-8 text-muted-foreground">No unmatched game data found.</div>
       )}
