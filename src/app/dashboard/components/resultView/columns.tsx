@@ -16,6 +16,11 @@ const teamColumns: ColumnDef<TeamResult>[] = [
     header: "Team",
   },
   {
+    accessorKey: "rank",
+    header: "Rank",
+    sortingFn: "basic",
+  },
+  {
     accessorKey: "kill",
     header: "Kills",
     sortingFn: "basic",
