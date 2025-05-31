@@ -22,6 +22,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { TournamentResults } from "./columns";
 import { toast } from "sonner";
+import StarOfTheMatch from "../StarOfTheMatch";
 
 export default function ResultTabs() {
   const [event, setEvent] = useState<string>("");
@@ -300,6 +301,7 @@ export default function ResultTabs() {
           </Select>
         </div>
         )}
+        {matchNo && <StarOfTheMatch matchId={matchNo} />}
       </div>
       <div className="w-full flex items-center">
            <TournamentResults data={showResultData} isLoading={loading}/>

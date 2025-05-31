@@ -412,12 +412,13 @@ export interface PlayerResult {
   kill: number;
   damage: number;
   survivalTime: number;
-  avgSurvivalTime: number;
+  avgSurvivalTime?: number;
   assists: number;
   heal: number;
   matchesPlayed: number;
   cRank?: number;
   mvp: number;
+  [key: string]: any;
 }
 
 export const getOverallResults = async (
@@ -818,4 +819,150 @@ export const getMatchData = async (
     return { matchExists: false, data: null, message: "Error fetching match data" };
   }
 };
-  
+
+export interface StarOfMatch {
+  goingAllOut: {
+    inGameName: string;
+    uId: string;
+    teamName: string;
+    knockouts: number;
+    kill: number;
+    bonus: number;
+    damage: number;
+  }[];
+  bestCompanion: {
+    inGameName: string;
+    uId: string;
+    teamName: string;
+    assists: number;
+    rescueTimes: number;
+    heal: number;
+    survivalTime: number;
+  }[];
+  finishers: {
+    inGameName: string;
+    uId: string;
+    teamName: string;
+    kill: number;
+    assists: number;
+    travelDistance: number;
+    survivalTime: number;
+  }[]
+}
+
+
+export const getStarOfTheMatch = async (
+  matchId: string
+): Promise<{status: string; message: string; result?: StarOfMatch; }> => {
+    try {
+    const objectId = matchId;
+    console.log("Fetching star of the match for match ID:", objectId);
+    
+
+    // Fetch schedule document to retrieve match number
+    const scheduleDoc : ScheduleDoc | null = await ScheduleDB.findById(objectId)
+      .populate("group stage event")
+      .lean<ScheduleDoc>();
+    if (!scheduleDoc) {
+      return {status: "error", message: "Schedule not found for the match"};
+    }
+    // Fetch team and player stats for the match
+    const playerStats = await PlayerStatsDB.find({ match: scheduleDoc.match })
+        .populate({
+          path: "player",
+          select: "name uid team",
+          populate: {
+            path: "team",
+            select: "name group",
+            strictPopulate: false,
+          },
+          strictPopulate: false,
+        })
+        .lean()
+
+    // Aggregate player stats
+    const playerResultsMap: Record<string, PlayerResult> = {};
+
+    for (const stat of playerStats) {
+      const playerId = stat.player._id.toString();
+      if (!playerResultsMap[playerId]) {
+        playerResultsMap[playerId] = {
+          inGameName: textDecoder(stat.player.name) || "Unknown Player",
+          uId: stat.player.uid || "N/A",
+          teamName: textDecoder(stat.player.team.name) || "Unknown Team",
+          kill: 0,
+          damage: 0,
+          survivalTime: 0,
+          assists: 0,
+          heal: 0,
+          mvp: 0,
+          cRank: stat.rank || 0,
+          knockouts: 0,
+          rescueTimes: 0,
+          travelDistance: 0,
+          matchesPlayed: 0,
+        };
+      }
+
+      const playerData = playerResultsMap[playerId];
+      playerData.kill += stat.killNum;
+      playerData.damage += stat.damage;
+      playerData.survivalTime += stat.survivalTime;
+      playerData.assists += stat.assists;
+      playerData.heal += stat.heal;
+      playerData.knockouts += stat.knockouts;
+      playerData.rescueTimes += stat.rescueTimes;
+      playerData.travelDistance += stat.driveDistance + stat.marchDistance;
+
+    }
+    const playerResults = Object.values(playerResultsMap);
+    const maxKills = Math.max(...playerResults.map(player => player.kill));
+    const goingAllOut = playerResults
+      .filter(player => player.kill === maxKills)
+      .map(player => ({
+        inGameName: player.inGameName,
+        uId: player.uId,
+        teamName: player.teamName,
+        knockouts: player.knockouts,
+        kill: player.kill,
+        bonus: 0,
+        damage: player.damage,
+      }));
+
+    // Get highest rescue times
+    const maxRescueTimes = Math.max(...playerResults.map(player => player.rescueTimes));
+    const bestCompanion = playerResults
+      .filter(player => player.rescueTimes === maxRescueTimes)
+      .map(player => ({
+        inGameName: player.inGameName,
+        uId: player.uId,
+        teamName: player.teamName,
+        assists: player.assists,
+        rescueTimes: player.rescueTimes,
+        heal: player.heal,
+        survivalTime: player.survivalTime,
+      }));
+
+    const finishers = playerResults.filter(player => player.cRank === 1)
+      .map(player => ({
+        inGameName: player.inGameName,
+        uId: player.uId,
+        teamName: player.teamName,
+        kill: player.kill,
+        assists: player.assists,
+        travelDistance: player.travelDistance,
+        survivalTime: player.survivalTime,
+    }));
+
+    const result = {
+      goingAllOut,
+      bestCompanion,
+      finishers,
+    }
+
+    return {status: "success", message: "Successfull", result };
+  } catch (error) {
+    console.log("Error fetching per-match results:", error);
+    return {status: "error", message: "Error fetching per-match results"};
+  }
+}

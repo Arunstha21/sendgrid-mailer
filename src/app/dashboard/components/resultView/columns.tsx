@@ -78,10 +78,12 @@ const playerColumns: ColumnDef<PlayerResult>[] = [
     header: "Avg. Survival",
     sortingFn: "basic",
     cell: ({ row }) => {
+      if(row.original.avgSurvivalTime) {
       const seconds = row.original.avgSurvivalTime;
       const minutes = Math.floor(seconds / 60);
       const remainingSeconds = Math.floor(seconds % 60);
       return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+      }
     },
   },
   {
