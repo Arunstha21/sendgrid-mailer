@@ -90,7 +90,13 @@ export default function CheckPlayerData({matchData, setMatchData, matchNo, check
       <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Unmatched Player Data</DialogTitle>
+          <div className="text-sm text-muted-foreground">
+            {unMatchedGameData.length} unmatched players found in game data.
+            <br />
+            Total players in game data: {matchData?.allinfo.TotalPlayerList.length || 0}
+          </div>
         </DialogHeader>
+
             {unMatchedGameData.length > 0 ? (
           <div className="space-y-2">
             {unMatchedGameData.map((player) => (
@@ -127,7 +133,10 @@ export default function CheckPlayerData({matchData, setMatchData, matchNo, check
             ))}
           </div>
       ) : (
-        <div className="text-center py-8 text-muted-foreground">No unmatched game data found.</div>
+        <div className="text-center py-8 text-muted-foreground">{unMatchedGameData.length} unmatched players found in game data.
+            <br />
+            Total players in game data: {matchData?.allinfo.TotalPlayerList.length || 0}
+          </div>
       )}
 
       {checking ? null :<Button className="mt-4" onClick={updatePlayerDataHandler} >Update Player Data</Button>}
