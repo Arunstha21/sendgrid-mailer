@@ -133,10 +133,7 @@ export default function CheckPlayerData({matchData, setMatchData, matchNo, check
             ))}
           </div>
       ) : (
-        <div className="text-center py-8 text-muted-foreground">{unMatchedGameData.length} unmatched players found in game data.
-            <br />
-            Total players in game data: {matchData?.allinfo.TotalPlayerList.length || 0}
-          </div>
+        <div className="text-center py-8 text-muted-foreground">No unmatched players found.</div>
       )}
 
       {checking ? null :<Button className="mt-4" onClick={updatePlayerDataHandler} >Update Player Data</Button>}
