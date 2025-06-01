@@ -1,7 +1,7 @@
 "use server";
 
 import {
-    EventDB,
+  EventDB,
   MatchDB,
   PlayerDB,
   PlayerStatsDB,
@@ -10,12 +10,13 @@ import {
   TeamStatsDB,
 } from "@/lib/database/schema";
 import { ObjectId } from "mongoose";
+import { object } from "zod";
 
 interface Location {
   x: number;
   y: number;
   z: number;
-}
+};
 
 interface Player {
   uId: number;
@@ -61,7 +62,7 @@ interface Player {
   PoisonTotalDamage: number;
   UseSelfRescueTime: number;
   UseEmergencyCallTime: number;
-}
+};
 
 interface Team {
     teamId: number,
@@ -70,7 +71,7 @@ interface Team {
     logoPicUrl: string, 
     killNum: number,
     liveMemberNum: number
-}
+};
 
 export interface MatchData {
   allinfo: {
@@ -82,11 +83,11 @@ export interface MatchData {
     CurrentTime: string;
     TeamInfoList: Team[];
   };
-}
+};
 
 function textDecoder(text: string) {
   return new TextDecoder().decode(new Uint8Array([...text].map(char => char.charCodeAt(0))));
-}
+};
 
 export const checkPlayerData = async (
   data: MatchData,
@@ -403,7 +404,8 @@ export interface TeamResult {
   cRank?: number;
   rank?: number;
   lastMatchRank?: number;
-}
+  [key: string]: any;
+};
 
 export interface PlayerResult {
   inGameName: string;
@@ -419,7 +421,7 @@ export interface PlayerResult {
   cRank?: number;
   mvp: number;
   [key: string]: any;
-}
+};
 
 export const getOverallResults = async (
     matchIds: string[]
@@ -479,6 +481,18 @@ export const getOverallResults = async (
             wwcd: 0,
             matchesPlayed: 0,
             lastMatchRank: stat.rank,
+            survivalTime: 0,
+            assists: 0,
+            knockouts: 0,
+            heal: 0,
+            grenadeKills: 0,
+            vehicleKills: 0,
+            headShotNum: 0,
+            smokeGrenadeUsed: 0,
+            fragGrenadeUsed: 0,
+            burnGrenadeUsed: 0,
+            vecileTravelDistance: 0,
+            killDistance: 0,
           };
         }
   
@@ -490,6 +504,19 @@ export const getOverallResults = async (
         teamData.wwcd += stat.rank === 1 ? 1 : 0;
         teamData.matchesPlayed += 1;
         teamData.lastMatchRank = stat.rank;
+
+        teamData.survivalTime += stat.survivalTime;
+        teamData.assists += stat.assists;
+        teamData.knockouts += stat.knockouts;
+        teamData.heal += stat.heal;
+        teamData.grenadeKills += stat.killNumByGrenade;
+        teamData.vehicleKills += stat.killNumInVehicle;
+        teamData.headShotNum += stat.headShotNum;
+        teamData.smokeGrenadeUsed += stat.useSmokeGrenadeNum;
+        teamData.fragGrenadeUsed += stat.useFragGrenadeNum;
+        teamData.burnGrenadeUsed += stat.useBurnGrenadeNum;
+        teamData.vecileTravelDistance += stat.driveDistance;
+        teamData.killDistance = Math.max(teamData.killDistance, stat.maxKillDistance);
       }
   
       const teamResults = Object.values(teamResultsMap);
@@ -530,6 +557,15 @@ export const getOverallResults = async (
                   heal: 0,
                   matchesPlayed: 0,
                   mvp: 0,
+                  knockouts: 0,
+                  grenadeKills: 0,
+                  vehicleKills: 0,
+                  headShotNum: 0,
+                  smokeGrenadeUsed: 0,
+                  fragGrenadeUsed: 0,
+                  burnGrenadeUsed: 0,
+                  vecileTravelDistance: 0,
+                  killDistance: 0,
               };
           }
 
@@ -557,6 +593,16 @@ export const getOverallResults = async (
           playerData.assists += stat.assists;
           playerData.heal += stat.heal;
           playerData.matchesPlayed += 1;
+
+          playerData.knockouts += stat.knockouts;
+          playerData.grenadeKills += stat.killNumByGrenade;
+          playerData.vehicleKills += stat.killNumInVehicle;
+          playerData.headShotNum += stat.headShotNum;
+          playerData.smokeGrenadeUsed += stat.useSmokeGrenadeNum;
+          playerData.fragGrenadeUsed += stat.useFragGrenadeNum;
+          playerData.burnGrenadeUsed += stat.useBurnGrenadeNum;
+          playerData.vecileTravelDistance += stat.driveDistance;
+          playerData.killDistance = Math.max(playerData.killDistance, stat.maxKillDistance);
       }
 
       // Calculate MVP for each player in each match
@@ -570,7 +616,7 @@ export const getOverallResults = async (
               const damageRatio = playerStat.damage / matchTotal.damage;
               const killRatio = playerStat.kills / matchTotal.kills;
 
-              const mvpRating = survivalRatio * 0.4 + damageRatio * 0.4 + killRatio * 0.2;
+              const mvpRating = survivalRatio * 0.2 + damageRatio * 0.3 + killRatio * 0.5;
 
               // Add MVP score to player's total
               playerResultsMap[playerId].mvp += mvpRating;
@@ -601,7 +647,7 @@ export const getOverallResults = async (
       console.log("Error fetching overall results:", error);
       return {status: "error", message: "Error fetching overall results", teamResults: [], playerResults: []};
     }
-  };
+};
   
 export interface Event {
   _id: ObjectId;
@@ -609,7 +655,7 @@ export interface Event {
   stage: ObjectId[];
   __v: number;
   pointSystem: ObjectId;
-  }
+};
 
 export interface Stage {
   _id: ObjectId;
@@ -617,14 +663,14 @@ export interface Stage {
   event: ObjectId; 
   group: ObjectId[];
   __v: number;
-}
+};
   
 export interface ScheduleDoc {
   _id: ObjectId;
   event: Event;
   stage: Stage;
   match: ObjectId;
-}
+};
 
 export const getPerMatchResults = async (
   matchId: string
@@ -680,6 +726,18 @@ export const getPerMatchResults = async (
           totalPoint: 0,
           wwcd: 0,
           matchesPlayed: 0,
+          survivalTime: 0,
+          assists: 0,
+          knockouts: 0,
+          heal: 0,
+          grenadeKills: 0,
+          vehicleKills: 0,
+          headShotNum: 0,
+          smokeGrenadeUsed: 0,
+          fragGrenadeUsed: 0,
+          burnGrenadeUsed: 0,
+          vecileTravelDistance: 0,
+          killDistance: 0,
         };
       }
 
@@ -689,6 +747,20 @@ export const getPerMatchResults = async (
       teamData.wwcd += stat.rank === 1 ? 1 : 0;
       teamData.matchesPlayed += 1;
       teamData.rank = stat.rank;
+
+      teamData.survivalTime += stat.survivalTime;
+      teamData.assists += stat.assists;
+      teamData.knockouts += stat.knockouts;
+      teamData.heal += stat.heal;
+      teamData.grenadeKills += stat.killNumByGrenade;
+      teamData.vehicleKills += stat.killNumInVehicle;
+      teamData.headShotNum += stat.headShotNum;
+      teamData.smokeGrenadeUsed += stat.useSmokeGrenadeNum;
+      teamData.fragGrenadeUsed += stat.useFragGrenadeNum;
+      teamData.burnGrenadeUsed += stat.useBurnGrenadeNum;
+      teamData.vecileTravelDistance += stat.driveDistance;
+      teamData.killDistance = Math.max(teamData.killDistance, stat.maxKillDistance);
+
 
       teamData.placePoint = pointSystem.pointSystem.find((point: {rank:number; point: number; _id: ObjectId}) => point.rank === stat.rank)?.point || 0;
       teamData.totalPoint = teamData.placePoint + teamData.kill;
@@ -731,6 +803,15 @@ export const getPerMatchResults = async (
           heal: 0,
           matchesPlayed: 0,
           mvp: 0,
+          knockouts: 0,
+          grenadeKills: 0,
+          vehicleKills: 0,
+          headShotNum: 0,
+          smokeGrenadeUsed: 0,
+          fragGrenadeUsed: 0,
+          burnGrenadeUsed: 0,
+          vecileTravelDistance: 0,
+          killDistance: 0,
         };
       }
 
@@ -741,6 +822,15 @@ export const getPerMatchResults = async (
       playerData.assists += stat.assists;
       playerData.heal += stat.heal;
       playerData.matchesPlayed += 1;
+      playerData.knockouts += stat.knockouts;
+      playerData.grenadeKills += stat.killNumByGrenade;
+      playerData.vehicleKills += stat.killNumInVehicle;
+      playerData.headShotNum += stat.headShotNum;
+      playerData.smokeGrenadeUsed += stat.useSmokeGrenadeNum;
+      playerData.fragGrenadeUsed += stat.useFragGrenadeNum;
+      playerData.burnGrenadeUsed += stat.useBurnGrenadeNum;
+      playerData.vecileTravelDistance += stat.driveDistance;
+      playerData.killDistance = Math.max(playerData.killDistance, stat.maxKillDistance);
 
       totalSurvivalTime += stat.survivalTime;
       totalDamage += stat.damage;
@@ -753,9 +843,9 @@ export const getPerMatchResults = async (
 
       playerResultsMap[playerId].avgSurvivalTime = playerResultsMap[playerId].survivalTime / playerResultsMap[playerId].matchesPlayed;
       playerResultsMap[playerId].mvp = parseFloat((
-          (playerSurvivalTimeRatio * 0.4 +
-            playerDamageRatio * 0.4 +
-            playerKillRatio * 0.2) *
+          (playerSurvivalTimeRatio * 0.2 +
+            playerDamageRatio * 0.3 +
+            playerKillRatio * 0.5) *
           100
         ).toFixed(3));
     }
@@ -779,7 +869,6 @@ export const getPerMatchResults = async (
     return {status: "error", message: "Error fetching per-match results", teamResults: [], playerResults: []};
   }
 };
-
 
 export const getMatchData = async (
   scheduleIds: string[]
@@ -848,8 +937,29 @@ export interface StarOfMatch {
     travelDistance: number;
     survivalTime: number;
   }[]
-}
+};
 
+export const getResultsData = async (stageId: string): Promise<{status: string; message: string; data?: { teamResults: TeamResult[]; playerResults: PlayerResult[] } }> => {
+  try{
+    const scheduleDocs: ScheduleDoc[] = await ScheduleDB.find({ stage: stageId });
+    if (scheduleDocs.length === 0) {
+      return {status: "error", message: "No schedules found for the stage"};
+    }
+    const matchIds = scheduleDocs.map((doc) => doc.match).filter((id) => id).map((id) => id.toString());
+    if (matchIds.length === 0) {
+      return {status: "error", message: "No matches found for the stage"};
+    }
+    const data = await getOverallResults(matchIds);
+    if(data.status === "error"){
+      return {status: "error", message: data.message};
+    }
+    return {status: "success", message: "Results data fetched successfully", data: { teamResults: data.teamResults, playerResults: data.playerResults }};
+
+  }catch (error) {
+    console.log("Error fetching results data:", error);
+    return {status: "error", message: "Error fetching results data"};
+  }
+}
 
 export const getStarOfTheMatch = async (
   matchId: string
@@ -965,4 +1075,4 @@ export const getStarOfTheMatch = async (
     console.log("Error fetching per-match results:", error);
     return {status: "error", message: "Error fetching per-match results"};
   }
-}
+};
