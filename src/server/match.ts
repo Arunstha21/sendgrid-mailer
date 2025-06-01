@@ -10,7 +10,6 @@ import {
   TeamStatsDB,
 } from "@/lib/database/schema";
 import { ObjectId } from "mongoose";
-import { object } from "zod";
 
 interface Location {
   x: number;
