@@ -17,6 +17,7 @@ export default function CheckMatchInfo(){
   const [scheduleList, setScheduleList] = useState<Schedule[]>([])
 
   const [uploading, setUploading] = useState<boolean>(false)
+  const [copied, setCopied] = useState<boolean>(false);
 
 
   const uploadMatchData = (): void => {
@@ -93,6 +94,41 @@ export default function CheckMatchInfo(){
     });
   }
 
+  const copyTotalPlayerList = () => {
+    if (!matchData) {
+      toast.error("No match data available to copy");
+      return;
+    }
+
+    if (!matchData.allinfo?.TotalPlayerList?.length) {
+      toast.error("No player data available to copy");
+      return;
+    }
+    const players = matchData?.allinfo?.TotalPlayerList;
+    if (!players?.length) return;
+
+    const allKeys = Object.keys(players[0]);
+    const keys = allKeys.filter(k => k !== "location");
+
+    const rows = players.map(player =>
+      keys.map(key => {
+        const value = player[key as keyof typeof player];
+        return String(value).replace(/\t/g, " ").replace(/\n/g, " ");
+      }).join("\t")
+    );
+
+    const tsv = [keys.join("\t"), ...rows].join("\n");
+
+    navigator.clipboard.writeText(tsv)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 3000);
+      })
+      .catch(err => {
+        console.error("Failed to copy:", err);
+      });
+  };
+
 
     return (
     <div className="w-full max-w-[1400px] mx-auto">
@@ -110,9 +146,19 @@ export default function CheckMatchInfo(){
             <CheckPlayerData matchData={matchData} setMatchData={setMatchData} matchNo={matchNo} checking={!isMatchEnded}/>
         </div>
         {showMatchUpload ? (
+        <div className="flex items-center gap-2">
           <Button onClick={uploadMatchData} disabled={!matchData}>
-            <Upload className="mr-2 h-4 w-4" /> {uploading? "Uploading....." :"Upload Match Data"}
-          </Button>) : null}
+            <Upload className="mr-2 h-4 w-4" />
+            {uploading ? "Uploading..." : "Upload Match Data"}
+          </Button>
+          <Button
+            onClick={copyTotalPlayerList}
+            disabled={copied || !matchData?.allinfo?.TotalPlayerList?.length}
+          >
+            {copied ? "Copied!" : "Copy data"}
+          </Button>
+        </div>
+        ) : null}
     </div>
     </div>
     );

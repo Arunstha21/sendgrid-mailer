@@ -342,7 +342,7 @@ export async function getGroupAndSchedule(stageId: string, reqFrom?: string): Pr
       const groups = schedule.group;
 
       isMultiGroup = schedule.stage.isMultiGroup || false;
-
+      
       if (groups.length > 1) {
         isMultiGroup = true;
       }
@@ -421,7 +421,7 @@ export async function getGroupAndSchedule(stageId: string, reqFrom?: string): Pr
         group.team.some((team: { slot: number }) => team.slot < 0)
       );
 
-      const teamMap = new Map<string, { id: string; slotRef: number; slot: number; team: string; email: string;  playerEmails: string[] | null}>();
+      const teamMap = new Map<string, { id: string; slotRef: number; slot?: number; team: string; email: string;  playerEmails: string[] | null}>();
 
       // Second pass: process teams with the flag already determined
       for (let groupIndex = 0; groupIndex < groups.length; groupIndex++) {
@@ -433,7 +433,6 @@ export async function getGroupAndSchedule(stageId: string, reqFrom?: string): Pr
               team: team.name,
               email: team.email,
               slotRef: useDynamicSlot ? -team.slot : team.slot,
-              slot: useDynamicSlot ? 5 + groupIndex : Math.abs(team.slot),
               playerEmails: (() => {
                 const emails = Array.from(
                   new Set(
@@ -454,7 +453,17 @@ export async function getGroupAndSchedule(stageId: string, reqFrom?: string): Pr
         return Math.abs(a.slotRef) - Math.abs(b.slotRef);
       });
 
-      teamsByGroupId[combinedGroupId].data = sortedTeams;
+      const finalTeams = useDynamicSlot
+        ? sortedTeams.map((team, index) => ({
+            ...team,
+            slot: 5 + index,
+          }))
+        : sortedTeams.map((team) => ({
+            ...team,
+            slot: Math.abs(team.slotRef),
+          }));
+
+      teamsByGroupId[combinedGroupId].data = finalTeams;
       teamsByGroupId[combinedGroupId].schedule.push({
         id: schedule._id.toString(),
         matchNo: schedule.matchNo,
