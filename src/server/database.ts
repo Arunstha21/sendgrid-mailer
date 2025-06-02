@@ -29,8 +29,8 @@ export type ScheduleData = {
   map: string;
   startTime: string;
   date: string;
+  omNo?: number | null;
 };
-
 
 export async function ImportDataDB(
   data: EventData[] | ScheduleData[],
@@ -41,82 +41,108 @@ export async function ImportDataDB(
       const failedTeams: string[] = [];
 
       for (const entry of eventData) {
-        try {
-          // Validate Player Count Before Creating a Team
-          if (entry.players.length < 4 || entry.players.length > 6) {
-            failedTeams.push(entry.team);
-            continue;
-          }
-      
-          // Find or Create Event
-          const event = await EventDB.findOneAndUpdate(
-            { name: entry.event },
-            { $setOnInsert: { name: entry.event, stage: [] } },
-            { new: true, upsert: true }
-          );
-      
-          // Find or Create Stage
-          const stage = await StageDB.findOneAndUpdate(
-            { name: entry.stage, event: event._id },
-            { $setOnInsert: { name: entry.stage, event: event._id, group: [] } },
-            { new: true, upsert: true }
-          );
-      
-          // Find or Create Group
-          const group = await GroupDB.findOneAndUpdate(
-            { name: entry.group, stage: stage._id, event: event._id },
-            { $setOnInsert: { name: entry.group, stage: stage._id, event: event._id, schedule: [] } },
-            { new: true, upsert: true }
-          );
-      
-          // Ensure Team Name is Unique Within the Group
-          const existingTeam = await TeamDB.findOne({
-            name: entry.team,
-            group: group._id,
-          });
-      
-          if (existingTeam) {
-            failedTeams.push(entry.team);
-            continue;
-          }
-      
-          // Create Team
-          const team = await TeamDB.create({
-            event: event._id,
-            stage: stage._id,
-            group: group._id,
-            slot: entry.slot,
-            name: entry.team,
-            email: entry.email,
-          });
-      
-          // Update Event, Stage, and Group Relationships
-          await Promise.all([
-            EventDB.updateOne({ _id: event._id }, { $addToSet: { stage: stage._id } }),
-            StageDB.updateOne({ _id: stage._id }, { $addToSet: { group: group._id } }),
-            GroupDB.updateOne({ _id: group._id }, { $addToSet: { team: team._id } }),
-          ]);
-      
-          // Insert Players
-          const playerDocs = entry.players.map(player => ({
-            team: team._id,
-            name: player.name,
-            uid: player.uid,
-            email: player.email,
-          }));
-          const players = await PlayerDB.insertMany(playerDocs);
-      
-          // Update Team with Player References
-          await TeamDB.updateOne(
-            { _id: team._id },
-            { $push: { player: { $each: players.map(p => p._id) } } }
-          );
-      
-          console.log(`Inserted team '${entry.team}' with ${players.length} players`);
-        } catch (error : any) {
-          console.error(`Error processing team '${entry.team}': ${error.message}`);
+      try {
+        if (entry.players.length < 4 || entry.players.length > 6) {
           failedTeams.push(entry.team);
+          continue;
         }
+
+        const event = await EventDB.findOneAndUpdate(
+          { name: entry.event },
+          { $setOnInsert: { name: entry.event, stage: [] } },
+          { new: true, upsert: true }
+        );
+
+        const stage = await StageDB.findOneAndUpdate(
+          { name: entry.stage, event: event._id },
+          { $setOnInsert: { name: entry.stage, event: event._id, group: [] } },
+          { new: true, upsert: true }
+        );
+
+        const group = await GroupDB.findOneAndUpdate(
+          { name: entry.group, stage: stage._id, event: event._id },
+          { $setOnInsert: { name: entry.group, stage: stage._id, event: event._id, schedule: [] } },
+          { new: true, upsert: true }
+        );
+
+        const existingTeam = await TeamDB.findOne({ name: entry.team, stage: stage._id });
+
+        if (existingTeam) {
+          let updates: {email?: string; slot?: string} = {};
+          if (existingTeam.email !== entry.email) updates.email = entry.email;
+          if (existingTeam.slot !== entry.slot) updates.slot = entry.slot;
+
+          if (Object.keys(updates).length > 0) {
+            await TeamDB.updateOne({ _id: existingTeam._id }, { $set: updates });
+          }
+
+          const existingPlayers = await PlayerDB.find({ team: existingTeam._id }, { uid: 1 });
+          const existingUIDs = new Set(existingPlayers.map(p => p.uid));
+
+          const newPlayers = entry.players.filter(p => !existingUIDs.has(p.uid));
+
+          if (newPlayers.length > 0) {
+            const playerDocs = newPlayers.map(p => ({
+              team: existingTeam._id,
+              name: p.name,
+              uid: p.uid,
+              email: p.email,
+            }));
+
+            const insertedPlayers = await PlayerDB.insertMany(playerDocs);
+
+            await TeamDB.updateOne(
+              { _id: existingTeam._id },
+              { $push: { player: { $each: insertedPlayers.map(p => p._id) } } }
+            );
+          }
+
+          // Ensure the team is added to the new group if it's not already present
+          await GroupDB.updateOne(
+            { _id: group._id },
+            { $addToSet: { team: existingTeam._id } }
+          );
+
+          console.log(`Updated existing team '${entry.team}' with ${newPlayers.length} new players`);
+          continue;
+        }
+
+        const team = await TeamDB.create({
+          event: event._id,
+          stage: stage._id,
+          group: group._id,
+          slot: entry.slot,
+          name: entry.team,
+          email: entry.email,
+        });
+
+        await Promise.all([
+          EventDB.updateOne({ _id: event._id }, { $addToSet: { stage: stage._id } }),
+          StageDB.updateOne({ _id: stage._id }, { $addToSet: { group: group._id } }),
+          GroupDB.updateOne({ _id: group._id }, { $addToSet: { team: team._id } }),
+        ]);
+
+        const playerDocs = entry.players.map(player => ({
+          team: team._id,
+          name: player.name,
+          uid: player.uid,
+          email: player.email,
+        }));
+
+        const players = await PlayerDB.insertMany(playerDocs);
+
+        await TeamDB.updateOne(
+          { _id: team._id },
+          { $push: { player: { $each: players.map(p => p._id) } } }
+        );
+
+        console.log(`Inserted team '${entry.team}' with ${players.length} players`);
+      } catch (err) {
+        console.error(`Error processing team '${entry.team}':`, err);
+        failedTeams.push(entry.team);
+      }
+
+
       }
       
       if (failedTeams.length > 0) {
@@ -181,6 +207,7 @@ export async function ImportDataDB(
           map: entry.map,
           startTime: entry.startTime,
           date: entry.date,
+          omNo: entry.omNo || null,
         });
   
         for (const groupId of groupIds) {
@@ -298,7 +325,7 @@ export type Schedule = {
   match?: string;
 };
 
-export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGroup: boolean; groups: GroupAndSchedule[] }> {
+export async function getGroupAndSchedule(stageId: string, reqFrom?: string): Promise<{ isMultiGroup: boolean; groups: GroupAndSchedule[] }> {
   try {
     const scheduleData = await ScheduleDB.find({ stage: stageId }).populate({
       path: "group",
@@ -306,7 +333,7 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
         populate: {
         path: "player",
       } },
-    });
+    }).populate('stage');
 
     const teamsByGroupId: Record<string, GroupAndSchedule> = {};
     let isMultiGroup = false;
@@ -314,12 +341,13 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
     for (const schedule of scheduleData) {
       const groups = schedule.group;
 
+      isMultiGroup = schedule.stage.isMultiGroup || false;
+
       if (groups.length > 1) {
         isMultiGroup = true;
       }
 
       if (groups.length === 1) {
-        // Single group case
         const group = groups[0];
 
         if (!teamsByGroupId[group._id]) {
@@ -355,58 +383,19 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
         }
 
         teamsByGroupId[group._id].data = Array.from(teamMap.values()).sort((a, b) => a.slot - b.slot);
-
-
+      if(reqFrom === "resultView") {
+      if(schedule.match && schedule.match.toString() !== "null") {
         teamsByGroupId[group._id].schedule.push({
           id: schedule._id.toString(),
-          matchNo: schedule.matchNo,
+          matchNo: schedule.stage.isMultiGroup ? schedule.omNo || schedule.matchNo  : schedule.matchNo,
           map: schedule.map,
           startTime: schedule.startTime,
           date: schedule.date,
           match: schedule.match ? schedule.match.toString() : null
         });
-      } else if (groups.length >= 2) {
-        // Multiple groups case: Combine group names and set data
-        const combinedGroupId = groups.map((g: {_id: object}) => g._id.toString()).join("_");
-        const combinedGroupName = groups.map((g: {name: string}) => g.name).join(" vs ");
-
-        if (!teamsByGroupId[combinedGroupId]) {
-          teamsByGroupId[combinedGroupId] = {
-            id: combinedGroupId,
-            name: combinedGroupName,
-            data: [],
-            schedule: [],
-          };
-        }
-
-        const teamMap = new Map<string, { id: string; slot: number; team: string; email: string;  playerEmails: string[] | null}>();
-        for (const group of groups) {
-          for (const team of group.team) {
-            if (!teamMap.has(team.name)) {
-              teamMap.set(team.name, {
-                id: team._id.toString(),
-                slot: team.slot,
-                team: team.name,
-                email: team.email,
-                playerEmails: (() => {
-                      const emails = Array.from(
-                        new Set(
-                          team.player
-                            .map((player: { email: string }) => player.email.trim().toLowerCase())
-                            .filter((email: string) => email !== "")
-                        )
-                      ) as string[];
-
-                      return emails.length > 0 ? emails : null;
-                    })()
-              });
-            }
-          }
-        }
-
-        teamsByGroupId[combinedGroupId].data = Array.from(teamMap.values()).sort((a, b) => a.slot - b.slot);
-
-        teamsByGroupId[combinedGroupId].schedule.push({
+      }
+    } else {
+        teamsByGroupId[group._id].schedule.push({
           id: schedule._id.toString(),
           matchNo: schedule.matchNo,
           map: schedule.map,
@@ -414,7 +403,66 @@ export async function getGroupAndSchedule(stageId: string): Promise<{ isMultiGro
           date: schedule.date,
         });
       }
-    }
+      } else if (groups.length >= 2) {
+      const combinedGroupId = groups.map((g: {_id: object}) => g._id.toString()).join("_");
+      const combinedGroupName = groups.map((g: {name: string}) => g.name).join(" vs ");
+      
+      if (!teamsByGroupId[combinedGroupId]) {
+        teamsByGroupId[combinedGroupId] = {
+          id: combinedGroupId,
+          name: combinedGroupName,
+          data: [],
+          schedule: [],
+        };
+      }
+
+      // First pass: determine if dynamic slots are needed
+      let useDynamicSlot: boolean = groups.some((group: { team: { slot: number }[] }) => 
+        group.team.some((team: { slot: number }) => team.slot < 0)
+      );
+
+      const teamMap = new Map<string, { id: string; slotRef: number; slot: number; team: string; email: string;  playerEmails: string[] | null}>();
+
+      // Second pass: process teams with the flag already determined
+      for (let groupIndex = 0; groupIndex < groups.length; groupIndex++) {
+        const group = groups[groupIndex];
+        for (const team of group.team) {
+          if (!teamMap.has(team.name)) {
+            teamMap.set(team.name, {
+              id: team._id.toString(),
+              team: team.name,
+              email: team.email,
+              slotRef: useDynamicSlot ? -team.slot : team.slot,
+              slot: useDynamicSlot ? 5 + groupIndex : Math.abs(team.slot),
+              playerEmails: (() => {
+                const emails = Array.from(
+                  new Set(
+                    team.player
+                      .map((p: { email: string }) => p.email.trim().toLowerCase())
+                      .filter((email: string) => email !== "")
+                  )
+                ) as string[];
+                return emails.length > 0 ? emails : null;
+              })(),
+            });
+          }
+        }
+      }
+
+      const sortedTeams = Array.from(teamMap.values()).sort((a, b) => {
+        if (a.slotRef !== b.slotRef) return a.slotRef - b.slotRef;
+        return Math.abs(a.slotRef) - Math.abs(b.slotRef);
+      });
+
+      teamsByGroupId[combinedGroupId].data = sortedTeams;
+      teamsByGroupId[combinedGroupId].schedule.push({
+        id: schedule._id.toString(),
+        matchNo: schedule.matchNo,
+        map: schedule.map,
+        startTime: schedule.startTime,
+        date: schedule.date,
+      });
+    }}
 
     return {
       isMultiGroup,

@@ -539,6 +539,10 @@ export const getOverallResults = async (
       const matchTotals: Record<string, { survivalTime: number, damage: number, kills: number }> = {};
       const playerMatchStats: Record<string, Record<string, { survivalTime: number, damage: number, kills: number }>> = {};
 
+      let totalSurvivalTime = 0;
+      let totalDamage = 0;
+      let totalKill = 0;
+
       for (const stat of playerStats) {
           const playerId = stat.player._id.toString();
           const matchId = stat.match.toString();
@@ -593,6 +597,10 @@ export const getOverallResults = async (
           playerData.heal += stat.heal;
           playerData.matchesPlayed += 1;
 
+          totalSurvivalTime += stat.survivalTime;
+          totalDamage += stat.damage;
+          totalKill += stat.killNum;
+
           playerData.knockouts += stat.knockouts;
           playerData.grenadeKills += stat.killNumByGrenade;
           playerData.vehicleKills += stat.killNumInVehicle;
@@ -605,26 +613,34 @@ export const getOverallResults = async (
       }
 
       // Calculate MVP for each player in each match
-      for (const matchId in playerMatchStats) {
-          const matchTotal = matchTotals[matchId];
+      // for (const matchId in playerMatchStats) {
+      //     const matchTotal = matchTotals[matchId];
 
-          for (const playerId in playerMatchStats[matchId]) {
-              const playerStat = playerMatchStats[matchId][playerId];
+      //     for (const playerId in playerMatchStats[matchId]) {
+      //         const playerStat = playerMatchStats[matchId][playerId];
 
-              const survivalRatio = playerStat.survivalTime / matchTotal.survivalTime;
-              const damageRatio = playerStat.damage / matchTotal.damage;
-              const killRatio = playerStat.kills / matchTotal.kills;
+      //         const survivalRatio = playerStat.survivalTime / matchTotal.survivalTime;
+      //         const damageRatio = playerStat.damage / matchTotal.damage;
+      //         const killRatio = playerStat.kills / matchTotal.kills;
 
-              const mvpRating = survivalRatio * 0.2 + damageRatio * 0.3 + killRatio * 0.5;
+      //         const mvpRating = survivalRatio * 0.2 + damageRatio * 0.3 + killRatio * 0.5;
 
-              // Add MVP score to player's total
-              playerResultsMap[playerId].mvp += mvpRating;
-          }
-      }
+      //         // Add MVP score to player's total
+      //         playerResultsMap[playerId].mvp += mvpRating;
+      //     }
+      // }
 
       for (const playerId in playerResultsMap) {
+          const playerSurvivalTimeRatio = playerResultsMap[playerId].survivalTime / totalSurvivalTime;
+          const playerDamageRatio = playerResultsMap[playerId].damage / totalDamage;
+          const playerKillRatio = playerResultsMap[playerId].kill / totalKill;
+
           playerResultsMap[playerId].avgSurvivalTime = playerResultsMap[playerId].survivalTime / playerResultsMap[playerId].matchesPlayed;
-          playerResultsMap[playerId].mvp = parseFloat((playerResultsMap[playerId].mvp * 10).toFixed(3));
+          // playerResultsMap[playerId].mvp = parseFloat((playerResultsMap[playerId].mvp * 10).toFixed(3));
+          playerResultsMap[playerId].mvp = parseFloat((
+            (playerSurvivalTimeRatio * 0.2 +
+              playerDamageRatio * 0.3 +
+              playerKillRatio * 0.5) * 100).toFixed(2));
       }
 
       const playerResults = Object.values(playerResultsMap);
@@ -712,7 +728,7 @@ export const getPerMatchResults = async (
     const teamResultsMap: Record<string, TeamResult> = {};
 
     for (const stat of teamStats) {
-      const teamId = stat.team.slot;
+      const teamId = stat.team._id.toString();
       if(stat.team.dq === true){
         continue;
       }

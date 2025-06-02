@@ -30,6 +30,10 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
 
+  const hasAccessorKey = (data: TData[], key: string) => {
+   return data.some(row => (row as Record<string, unknown>).hasOwnProperty(key) && (row as Record<string, unknown>)[key] !== undefined)
+  }
+
   const table = useReactTable({
     data,
     columns,
@@ -39,6 +43,11 @@ export function DataTable<TData, TValue>({
     state: {
       sorting,
     },
+    initialState:{
+      columnVisibility: {
+        rank: hasAccessorKey(data, 'rank'),
+    }
+    }
   })
 
   return (
@@ -52,7 +61,7 @@ export function DataTable<TData, TValue>({
                   <TableHead key={header.id} className="text-center">
                     {header.isPlaceholder ? null : (
                       <div
-                        className={`flex items-center ${
+                        className={`flex items-center justify-center ${
                           header.column.getCanSort() ? 'cursor-pointer select-none' : ''
                         }`}
                         onClick={header.column.getToggleSortingHandler()}

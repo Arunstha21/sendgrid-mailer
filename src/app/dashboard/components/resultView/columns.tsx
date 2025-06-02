@@ -113,6 +113,7 @@ interface TournamentResultsProps {
 }
 
 export function TournamentResults({ data, isLoading }: TournamentResultsProps) {
+  console.log("Rendering TournamentResults with data:", data);
   
   if (isLoading) {
     return (

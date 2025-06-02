@@ -114,7 +114,8 @@ export default function ResultTabs() {
       if (stage === "") {
         return;
       }
-      const groupAndScheduleData = await getGroupAndSchedule(stage);
+      const reqFrom = "resultView";
+      const groupAndScheduleData = await getGroupAndSchedule(stage, reqFrom);
       const { groups, isMultiGroup } = groupAndScheduleData;
       if (isMultiGroup) {
        groups.push({
@@ -138,6 +139,7 @@ export default function ResultTabs() {
       return;
     }
     setScheduleList(group.schedule);
+
   };
 
   useEffect(() => {
@@ -156,6 +158,8 @@ export default function ResultTabs() {
       }
   
       try {
+        console.log("Fetching match data for schedule IDs:", scheduleIds);
+        
         const resultsData = await getMatchData(scheduleIds);
         if (resultsData.data === null) {
           toast.error(resultsData.message || "Error fetching data");
@@ -237,7 +241,11 @@ export default function ResultTabs() {
               <SelectValue placeholder="Select Match Number" />
             </SelectTrigger>
             <SelectContent>
-              {scheduleList.map((schedule) => (
+              {scheduleList.length === 0 ? 
+              <SelectItem key="0" value="no" disabled>
+                No Matches Available
+              </SelectItem>
+              : scheduleList.map((schedule) => (
                 <SelectItem key={schedule.id} value={schedule.id}>
                   {`${afterMatch ? "After Match" : "Match"} ${
                     schedule.matchNo
@@ -301,7 +309,7 @@ export default function ResultTabs() {
           </Select>
         </div>
         )}
-        {matchNo && <StarOfTheMatch matchId={matchNo} />}
+        {matchNo && !afterMatch && <StarOfTheMatch matchId={matchNo} />}
       </div>
       <div className="w-full flex items-center">
            <TournamentResults data={showResultData} isLoading={loading}/>

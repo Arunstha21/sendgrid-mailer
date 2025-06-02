@@ -72,6 +72,10 @@ const stageSchema = new Schema({
       ref: "Group",
     },
   ],
+  isMultiGroup: {
+    type: Boolean,
+    default: false,
+  }
 });
 
 const groupSchema = new Schema({
@@ -193,6 +197,9 @@ const scheduleSchema = new Schema({
   match:{
     type: Schema.Types.ObjectId,
     ref: "Match",
+  },
+  omNo: {
+    type: Number,
   }
 });
 

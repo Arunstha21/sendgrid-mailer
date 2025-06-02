@@ -131,12 +131,11 @@ export default function CheckPlayerData({matchData, setMatchData, matchNo, check
                 </div>)}
               </div>
             ))}
-          </div>
+            {checking ? null :<Button className="mt-4" onClick={updatePlayerDataHandler} >Update Player Data</Button>}
+          </div> 
       ) : (
         <div className="text-center py-8 text-muted-foreground">No unmatched players found.</div>
       )}
-
-      {checking ? null :<Button className="mt-4" onClick={updatePlayerDataHandler} >Update Player Data</Button>}
       </DialogContent>
     </Dialog>
     </>
