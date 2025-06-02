@@ -68,7 +68,7 @@ export async function ImportDataDB(
         const existingTeam = await TeamDB.findOne({ name: entry.team, stage: stage._id });
 
         if (existingTeam) {
-          let updates: {email?: string; slot?: string} = {};
+          const updates: {email?: string; slot?: string} = {};
           if (existingTeam.email !== entry.email) updates.email = entry.email;
           if (existingTeam.slot !== entry.slot) updates.slot = entry.slot;
 
@@ -417,7 +417,7 @@ export async function getGroupAndSchedule(stageId: string, reqFrom?: string): Pr
       }
 
       // First pass: determine if dynamic slots are needed
-      let useDynamicSlot: boolean = groups.some((group: { team: { slot: number }[] }) => 
+      const useDynamicSlot: boolean = groups.some((group: { team: { slot: number }[] }) => 
         group.team.some((team: { slot: number }) => team.slot < 0)
       );
 
