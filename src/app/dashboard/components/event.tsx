@@ -284,6 +284,9 @@ export default function Event() {
     scheduleList,
   ]);
 
+  console.log(subject);
+  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const toastLoadingId = toast.loading("Sending email...");

@@ -303,7 +303,7 @@ export async function getEventData() {
           name: stage.name,
         };
       }),
-      pointSystem: event.pointSystem.toString(),
+      pointSystem: event.pointSystem ? event.pointSystem.toString() : "",
     };
   });
   return data || [];

@@ -236,12 +236,13 @@ export const updateGameData = async (
     );
 
     if (!match) {
+      console.log("Error creating or updating match data for gameId:", GameID, "Data :", {group: schedule.group.name, stage: schedule.stage});
       return { status: "error", message: "Error updating match data" };
     }
-
-
+    console.log("Adding Match in schedule:", match._id, "for gameId:", GameID, "Data :", {group: schedule.group.name, stage: schedule.stage});
     schedule.match = match._id;
     await schedule.save();
+    console.log("Match added to schedule:", scheduleId, "with match ID:", match._id, "Data :", {group: schedule.group.name, stage: schedule.stage});
     
     let teams: string[] = [];
     if (Array.isArray(schedule.group)) {

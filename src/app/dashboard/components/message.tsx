@@ -76,7 +76,7 @@ export default function EventMessage({ type, data }: Props) {
           <p>Please find below the details for <strong>Match {idPass.matchNo}</strong> of <strong>{idPass.event}</strong> of {idPass.stage}</p>
         </span>
         <span>
-          <p><strong>🕒 Match Start Time: </strong>{idPass.startTime}<br/>
+          <p><strong>🕒 Match Start Time: </strong><span contentEditable="true" suppressContentEditableWarning>{idPass.startTime}</span><br/>
           <strong>🗺️ Map: </strong>{idPass.map}<br/>
           <strong>📌 Room ID: </strong>{idPass.matchId}<br/>
           <strong>🔒 Room Password: </strong>{idPass.password}</p>
