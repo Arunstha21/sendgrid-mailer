@@ -52,7 +52,9 @@ export default function MatchDataSelector({handleMatchChange, setScheduleData}: 
 
         const handleGroupChange = async (groupId: string) => {
             setGroup(groupId)
-            const scheduleData = groupList.find((group) => group.id === groupId)?.schedule || []
+            const scheduleData = groupList.find(group => group.id === groupId)?.schedule.filter(s => s.match === null) || [];
+            console.log("Schedule Data:", scheduleData);
+            
             setScheduleList(scheduleData)
             if(setScheduleData){
                 setScheduleData(scheduleData)

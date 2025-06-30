@@ -401,6 +401,7 @@ export async function getGroupAndSchedule(stageId: string, reqFrom?: string): Pr
           map: schedule.map,
           startTime: schedule.startTime,
           date: schedule.date,
+          match: schedule.match ? schedule.match.toString() : null
         });
       }
       } else if (groups.length >= 2) {
