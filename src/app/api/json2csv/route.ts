@@ -29,6 +29,9 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const url = searchParams.get('url');
 
+  const cacheBuster = searchParams.get('cacheBuster');
+  console.log(`Cache Buster: ${cacheBuster}`);
+  
   if (!url) {
     return new Response(JSON.stringify({ error: 'Missing ?url=' }), {
       status: 400,
