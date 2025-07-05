@@ -117,10 +117,6 @@ export default function ClutchDetector() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`
   }
 
-  const getStatusText = (status: string) => {
-    return status === "1" ? "Knock" : status === "2" ? "Finish" : "Unknown"
-  }
-
   const getStatusBadge = (status: string) => {
     if (status === "1") {
       return (
@@ -242,7 +238,7 @@ export default function ClutchDetector() {
           <CardContent>
             <div className="space-y-4">
               {clutches1v4.map((clutch, index) => (
-                <ClutchCard key={`1v4-${index}`} clutch={clutch} index={index + 1} />
+                <ClutchCard key={`1v4-${index}`} clutch={clutch} />
               ))}
             </div>
           </CardContent>
@@ -260,7 +256,7 @@ export default function ClutchDetector() {
           <CardContent>
             <div className="space-y-4">
               {clutches1v3.map((clutch, index) => (
-                <ClutchCard key={`1v3-${index}`} clutch={clutch} index={index + 1} />
+                <ClutchCard key={`1v3-${index}`} clutch={clutch} />
               ))}
             </div>
           </CardContent>
@@ -279,7 +275,7 @@ export default function ClutchDetector() {
   )
 }
 
-function ClutchCard({ clutch, index }: { clutch: Clutch; index: number }) {
+function ClutchCard({ clutch }: { clutch: Clutch;}) {
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
