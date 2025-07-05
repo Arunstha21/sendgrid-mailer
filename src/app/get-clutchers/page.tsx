@@ -197,7 +197,7 @@ function ClutchCard({ clutch }: { clutch: Clutch; index: number }) {
           <div className="space-y-1">
             {clutch.victimNames.map((victim, idx) => (
               <div key={idx} className="flex justify-between items-center p-2 bg-muted/50 rounded text-sm">
-                <span>{victim}</span>
+                <span>{victim} - {clutch.victimUIDs[idx]}</span>
                 {clutch.timestamps[idx] && (
                   <span className="font-mono text-muted-foreground">{formatTime(clutch.timestamps[idx])}</span>
                 )}
