@@ -11,6 +11,7 @@ import {
   UserDB,
 } from "@/lib/database/schema";
 import { GetProfileData } from "./user";
+import mongoose from "mongoose";
 
 export type EventData = {
   event: string;
@@ -539,5 +540,41 @@ export async function updateGroupAndScheduleData(stageId: string, data: GroupAnd
       return { status: "success", message: "Group and schedule data updated successfully." };
   } catch (error: any) {
       return { status: "error", message: error.message };
+  }
+}
+
+interface PopulatedPlayer {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  uid: string;
+}
+
+interface TeamWithPlayers {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  player: PopulatedPlayer[];
+}
+
+export async function getPlayerInfoList(stageId: string): Promise<{ id: string; name: string; uid: string; team: string | null; teamName: string | null }[]> {
+  try {
+    const teams = await TeamDB.find({ stage: stageId })
+      .populate({
+        path: "player",
+        select: "name uid",
+      }).lean();
+      
+    return (teams as unknown as TeamWithPlayers[]).flatMap((team) =>
+      team.player.map((player: PopulatedPlayer) => ({
+        id: player._id.toString(),
+        name: player.name,
+        uid: player.uid,
+        team: team._id.toString(),
+        teamName: team.name,
+      }))
+    );
+
+  } catch (error) {
+    console.error("Error fetching player info list:", error);
+    throw error;
   }
 }
