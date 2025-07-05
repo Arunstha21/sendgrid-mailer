@@ -291,7 +291,7 @@ function ClutchCard({ clutch }: { clutch: Clutch;}) {
         <div className="flex items-center justify-between mb-3">
           <div>
             <h3 className="font-semibold">{clutch.clutcherName}</h3>
-            <p className="text-sm text-muted-foreground">{clutch.clutcherIGN}</p>
+            <p className="text-sm text-muted-foreground">{clutch.clutcherUID}</p>
           </div>
           <Badge className={badgeColor}>{clutchType}</Badge>
         </div>
@@ -312,7 +312,7 @@ function ClutchCard({ clutch }: { clutch: Clutch;}) {
           <div className="space-y-1">
             {clutch.victimNames.map((victim, idx) => (
               <div key={idx} className="flex justify-between items-center p-2 bg-muted/50 rounded text-sm">
-                <span>{victim}</span>
+                <span>{victim} - {clutch.victimUIDs[idx]}</span>
                 {clutch.timestamps[idx] && (
                   <span className="font-mono text-muted-foreground">{formatTime(clutch.timestamps[idx])}</span>
                 )}

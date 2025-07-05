@@ -40,11 +40,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
     }
 
+    // Fill missing VictimUIDs based on name
+    const nameToUID: Record<string, string> = {}
+    for (const k of killInfo) {
+      if (k.VictimUID !== '0') {
+        nameToUID[k.VictimName] = k.VictimUID
+      }
+    }
+    for (const k of killInfo) {
+      if (k.VictimUID === '0' && nameToUID[k.VictimName]) {
+        k.VictimUID = nameToUID[k.VictimName]
+      }
+    }
+
     const playerInfo = await getPlayerInfoList(stageId)
     const teamMap = getTeamMap(playerInfo)
 
-    const knockMap: Record<string, Kill> = {} // victimUID => knock
-
+    // Map of victimUID => knock info
+    const knockMap: Record<string, Kill> = {}
     for (const k of killInfo) {
       if (k.ResultHealthStatus === '1') {
         knockMap[k.VictimUID] = k
@@ -54,23 +67,29 @@ export async function POST(req: NextRequest) {
     const killsByPlayer: Record<string, Kill[]> = {}
 
     for (const kill of killInfo) {
-      if (kill.ResultHealthStatus !== '2') continue
+      if (kill.ResultHealthStatus !== '2') continue // only process finishes
 
       const victimUID = kill.VictimUID
       const killerUID = kill.CauserUID
       const knock = knockMap[victimUID]
-
       if (!knock) continue
 
       const killerTeam = teamMap[killerUID]
       const knockTeam = teamMap[knock.CauserUID]
       const victimTeam = teamMap[victimUID]
 
-      const validKill =
-        (knock.CauserUID === killerUID) ||
-        (knock.CauserUID === '0' || !knockTeam || knockTeam !== killerTeam)
+      if (!victimTeam || killerTeam === victimTeam) continue // no team or same team, skip
 
-      if (!validKill || !victimTeam || killerTeam === victimTeam) continue
+      const isSameKillerAsKnocker = knock.CauserUID === killerUID
+      const knockByZoneOrUnknown = knock.CauserUID === '0' || !knockTeam
+      const knockByDifferentTeam = knockTeam && knockTeam !== killerTeam
+
+      const validKill =
+        isSameKillerAsKnocker ||
+        knockByZoneOrUnknown ||
+        knockByDifferentTeam
+
+      if (!validKill) continue
 
       if (!killsByPlayer[killerUID]) {
         killsByPlayer[killerUID] = []
@@ -102,8 +121,8 @@ export async function POST(req: NextRequest) {
           const clutch: Clutch = {
             clutcherUID: killerUID,
             clutcherName: teamKills[0].CauserName,
-            clutcherTeam: playerInfo.find(p=> p.uid === killerUID)?.teamName || 'Unknown',
-            victimTeam: playerInfo.find(p=> p.uid === uniqueVictims[0])?.teamName || 'Unknown',
+            clutcherTeam: playerInfo.find(p => p.uid === killerUID)?.teamName || 'Unknown',
+            victimTeam: playerInfo.find(p => p.uid === uniqueVictims[0])?.teamName || 'Unknown',
             victimUIDs: uniqueVictims,
             victimNames: [...new Set(teamKills.map(k => k.VictimName))],
             timestamps: teamKills.map(k => Number(k.CurGameTime))
